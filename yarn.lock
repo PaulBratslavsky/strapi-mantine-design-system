@@ -22,6 +22,105 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ast-grep/napi-darwin-arm64@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-darwin-arm64@npm:0.36.3"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-darwin-x64@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-darwin-x64@npm:0.36.3"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-linux-arm64-gnu@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-linux-arm64-gnu@npm:0.36.3"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-linux-arm64-musl@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-linux-arm64-musl@npm:0.36.3"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-linux-x64-gnu@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-linux-x64-gnu@npm:0.36.3"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-linux-x64-musl@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-linux-x64-musl@npm:0.36.3"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-win32-arm64-msvc@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-win32-arm64-msvc@npm:0.36.3"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-win32-ia32-msvc@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-win32-ia32-msvc@npm:0.36.3"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi-win32-x64-msvc@npm:0.36.3":
+  version: 0.36.3
+  resolution: "@ast-grep/napi-win32-x64-msvc@npm:0.36.3"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@ast-grep/napi@npm:^0.36.2":
+  version: 0.36.3
+  resolution: "@ast-grep/napi@npm:0.36.3"
+  dependencies:
+    "@ast-grep/napi-darwin-arm64": 0.36.3
+    "@ast-grep/napi-darwin-x64": 0.36.3
+    "@ast-grep/napi-linux-arm64-gnu": 0.36.3
+    "@ast-grep/napi-linux-arm64-musl": 0.36.3
+    "@ast-grep/napi-linux-x64-gnu": 0.36.3
+    "@ast-grep/napi-linux-x64-musl": 0.36.3
+    "@ast-grep/napi-win32-arm64-msvc": 0.36.3
+    "@ast-grep/napi-win32-ia32-msvc": 0.36.3
+    "@ast-grep/napi-win32-x64-msvc": 0.36.3
+  dependenciesMeta:
+    "@ast-grep/napi-darwin-arm64":
+      optional: true
+    "@ast-grep/napi-darwin-x64":
+      optional: true
+    "@ast-grep/napi-linux-arm64-gnu":
+      optional: true
+    "@ast-grep/napi-linux-arm64-musl":
+      optional: true
+    "@ast-grep/napi-linux-x64-gnu":
+      optional: true
+    "@ast-grep/napi-linux-x64-musl":
+      optional: true
+    "@ast-grep/napi-win32-arm64-msvc":
+      optional: true
+    "@ast-grep/napi-win32-ia32-msvc":
+      optional: true
+    "@ast-grep/napi-win32-x64-msvc":
+      optional: true
+  checksum: cb0f76caa1cc0cc9127389279a670f81949f67c96aef89085dcc8deac7b4b129749dbe38bbc2e39045b3872a7170884b4c9cb2d7992a2917025457f395e5b362
+  languageName: node
+  linkType: hard
+
 "@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.10.4, @babel/code-frame@npm:^7.12.13, @babel/code-frame@npm:^7.21.4, @babel/code-frame@npm:^7.27.1":
   version: 7.27.1
   resolution: "@babel/code-frame@npm:7.27.1"
@@ -4003,6 +4102,7 @@ __metadata:
     vite: ^5.4.21
     vite-plugin-dts: ^4.3.0
     vite-plugin-externalize-deps: ^0.8.0
+    vite-plugin-lib-inject-css: 2.2.2
   peerDependencies:
     "@strapi/icons": ^2.0.0 || ^2.0.0-beta || ^2.0.0-alpha
     react: ^17.0.0 || ^18.0.0
@@ -15864,6 +15964,19 @@ __metadata:
   peerDependencies:
     vite: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0
   checksum: 9932ce74acbe3390c4dc85c17a916bd00f8fdf3e77e6eac7eaf735247227c7fb17e427c7ae025bd25416d32f7f44f83f3ead195f903c71c0cd4b35f6d14855e1
+  languageName: node
+  linkType: hard
+
+"vite-plugin-lib-inject-css@npm:2.2.2":
+  version: 2.2.2
+  resolution: "vite-plugin-lib-inject-css@npm:2.2.2"
+  dependencies:
+    "@ast-grep/napi": ^0.36.2
+    magic-string: ^0.30.17
+    picocolors: ^1.1.1
+  peerDependencies:
+    vite: "*"
+  checksum: 604defd47ab65b07b5c9124ebd8da3cf3dc207f2c670cc9be855b32a56a47cd61c701739c3dbaea4dc24e49f586ac9a157d377ed1cb97d7f6346c48d5f21fd94
   languageName: node
   linkType: hard
 

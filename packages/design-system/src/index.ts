@@ -1,4 +1,17 @@
 /**
+ * CSS side-effect imports — order matters.
+ *
+ *   1. layers.css   — declares cascade-layer order before anything else loads.
+ *   2. mantine CSS  — Mantine 7 ships a pre-layered variant that drops into @layer mantine.
+ *   3. tokens.css   — our --strapi-* custom properties, wrapped in @layer strapi-tokens.
+ *
+ * sideEffects allowlist in package.json keeps these imports from being tree-shaken.
+ * -----------------------------------------------------------------------------------------------*/
+import './styles/layers.css';
+import '@mantine/core/styles.layer.css';
+import './styles/tokens.css';
+
+/**
  * Styled Components Module Declaration
  * -----------------------------------------------------------------------------------------------*/
 import 'styled-components';

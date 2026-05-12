@@ -3,7 +3,10 @@
   "version": "2.2.0",
   "type": "module",
   "license": "MIT",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css",
+    "./src/index.ts"
+  ],
   "source": "./src/index.ts",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -53,7 +56,8 @@
     "typescript": "5.4.5",
     "vite": "^5.4.21",
     "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-externalize-deps": "^0.8.0"
+    "vite-plugin-externalize-deps": "^0.8.0",
+    "vite-plugin-lib-inject-css": "2.2.2"
   },
   "peerDependencies": {
     "@strapi/icons": "^2.0.0 || ^2.0.0-beta || ^2.0.0-alpha",

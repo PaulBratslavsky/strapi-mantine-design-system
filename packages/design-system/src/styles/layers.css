@@ -1,0 +1,18 @@
+/**
+ * Cascade-layer order for @strapi/design-system.
+ *
+ * Layers listed from LOWEST priority to HIGHEST. Within layers, normal cascade
+ * rules apply. Anything UNLAYERED still wins over all layers — that's intentional
+ * during migration: styled-components emits unlayered runtime CSS that needs to
+ * keep overriding Mantine until each component is migrated.
+ *
+ *   reset           CSS reset rules (currently none — placeholder for future)
+ *   mantine         @mantine/core/styles.layer.css drops in here
+ *   strapi-tokens   --strapi-* custom properties (tokens.css)
+ *   strapi-components  Future: CSS modules for Mantine-backed wrappers
+ *   app             Reserved for the consuming app (Strapi admin) to override
+ *
+ * Defined here so the order is set before any CSS that uses these layer names
+ * is loaded — order is determined by first declaration.
+ */
+@layer reset, mantine, strapi-tokens, strapi-components, app;

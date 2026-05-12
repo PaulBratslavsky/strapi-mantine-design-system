@@ -1,3 +1,4 @@
+import { MantineProvider, createTheme } from '@mantine/core';
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import { DefaultTheme, ThemeProvider } from 'styled-components';
 
@@ -6,6 +7,9 @@ import { createContext } from '../helpers/context';
 import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect';
 import { GlobalStyle } from '../styles/global';
 import { lightTheme } from '../themes';
+
+// Phase 0b plumbing. Empty Mantine theme — Phase 1 maps Strapi tokens.
+const mantineTheme = createTheme({});
 
 const DEFAULT_LOCALE = 'en-EN';
 
@@ -68,11 +72,13 @@ const DesignSystemProvider = ({
 
   return (
     <Provider locale={locale}>
-      <ThemeProvider theme={theme}>
-        <TooltipProvider {...tooltipConfig}>{children}</TooltipProvider>
-        <LiveRegions />
-        <GlobalStyle />
-      </ThemeProvider>
+      <MantineProvider theme={mantineTheme} withCssVariables defaultColorScheme="light">
+        <ThemeProvider theme={theme}>
+          <TooltipProvider {...tooltipConfig}>{children}</TooltipProvider>
+          <LiveRegions />
+          <GlobalStyle />
+        </ThemeProvider>
+      </MantineProvider>
     </Provider>
   );
 };

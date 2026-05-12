@@ -69,12 +69,25 @@ const VARIANT_MAP: StrapiVariantMap = {
   'danger-light': { variant: 'light', color: 'danger' },
 };
 
-/** Strapi size → Mantine size. */
+/**
+ * Strapi size → Mantine size.
+ *
+ * Shifted one notch up vs the literal 1:1 mapping so Strapi 'S' (the default
+ * Button size) renders at Mantine 'md' — a comfortable mid-size that reads
+ * more confidently than Mantine 'sm'. Mantine's coordinated per-size
+ * variables (height + padding + line-height + section sizes + fz) all come
+ * along for the ride.
+ *
+ * If you want a different default scale, change the mapping here — DO NOT
+ * override sizing variables from external CSS, which knocks Mantine's
+ * coordinated variables out of proportion (see memory:
+ * feedback-mantine-size-via-props).
+ */
 const SIZE_MAP: Record<ButtonSize, MantineButtonProps['size']> = {
-  XS: 'xs',
-  S: 'sm',
-  M: 'md',
-  L: 'lg',
+  XS: 'md',
+  S: 'lg', // Strapi default — matches Input default ('M' → 'lg') so form
+  M: 'xl', // controls share the same visual height
+  L: 'xl',
 };
 
 // Mantine's <Button> has a strict polymorphic union type for the `component`

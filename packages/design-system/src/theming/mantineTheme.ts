@@ -34,7 +34,9 @@ const tupleFromStrapi = (name: string): MantineColorsTuple => [
 export const mantineTheme = createTheme({
   fontFamily:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif",
-  defaultRadius: 'var(--strapi-radius)',
+  // Single source of truth for radius across every Mantine component
+  // (Button, Input, Card, etc.). 10px = brand-confident without being a pill.
+  defaultRadius: '10px',
   primaryColor: 'primary',
   primaryShade: 6,
   colors: {

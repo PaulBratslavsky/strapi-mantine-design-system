@@ -1,7 +1,7 @@
 import { PlusCircle } from '@strapi/icons';
 import { render as renderRTL } from '@test/utils';
 
-import { Field } from './index';
+import * as Field from './LegacyField';
 
 interface ComponentProps extends Pick<Field.Props, 'required' | 'error' | 'hint' | 'name'>, Field.InputProps {
   labelAction?: Field.LabelProps['action'];

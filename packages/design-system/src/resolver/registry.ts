@@ -9,21 +9,31 @@
  * tracked in a frozen-on-read set. CI snapshots `getRegisteredVariants` to
  * detect removals. See notes/ds-migration/principles.md for the contract.
  */
+import type { ComponentType } from 'react';
+
 import type { DSComponentName, DSImpl, DSVariant } from './types';
 
-interface RegistryEntry<N extends DSComponentName> {
-  default: DSImpl<N>;
-  variants: Map<DSVariant<N>, DSImpl<N>>;
+/**
+ * Storage-only entry shape. Erases per-N generics so heterogeneous components
+ * share one Map. `ComponentType<never>` is the contravariant supertype every
+ * concrete `DSImpl<N>` assigns into — no `any` needed.
+ *
+ * Type safety is restored at the read boundary (shippedFor, shippedDefaultFor)
+ * where N is concrete and we cast back to `DSImpl<N>`.
+ */
+interface StoredEntry {
+  default: ComponentType<never>;
+  variants: Map<string, ComponentType<never>>;
   /** Append-only — every variant ever registered for this name. */
   knownVariants: Set<string>;
   /** Alias name → canonical variant. Both keep working forever. */
-  aliases: Map<string, DSVariant<N>>;
+  aliases: Map<string, string>;
 }
 
 // Module-scoped Map. Persistent for the lifetime of the JS module graph.
 // Imports of @strapi/design-system that trigger `registerDSComponent` mutate
 // this. SSR-safe because each module instance is per-bundle.
-const shipped = new Map<DSComponentName, RegistryEntry<any>>();
+const shipped = new Map<DSComponentName, StoredEntry>();
 
 export interface RegisterOptions<N extends DSComponentName> {
   /**
@@ -49,32 +59,28 @@ export interface RegisterOptions<N extends DSComponentName> {
  * the implementation but keeps the variant in `knownVariants`.
  */
 export function registerDSComponent<N extends DSComponentName>(name: N, opts: RegisterOptions<N>): void {
-  const prev = shipped.get(name) as RegistryEntry<N> | undefined;
+  const prev = shipped.get(name);
 
-  const variants = new Map<DSVariant<N>, DSImpl<N>>(prev?.variants ?? []);
+  const variants = new Map<string, ComponentType<never>>(prev?.variants ?? []);
   for (const [key, impl] of Object.entries(opts.variants ?? {})) {
-    variants.set(key as DSVariant<N>, impl as DSImpl<N>);
+    if (impl) variants.set(key, impl as ComponentType<never>);
   }
 
   // Append-only: union new keys with everything previously seen.
   const knownVariants = new Set<string>(prev?.knownVariants ?? []);
-  for (const key of variants.keys()) knownVariants.add(String(key));
+  for (const key of variants.keys()) knownVariants.add(key);
 
-  const aliases = new Map<string, DSVariant<N>>(prev?.aliases ?? []);
+  const aliases = new Map<string, string>(prev?.aliases ?? []);
   for (const [alias, canonical] of Object.entries(opts.aliases ?? {})) {
-    aliases.set(alias, canonical as DSVariant<N>);
+    aliases.set(alias, canonical);
   }
 
-  // Cast to RegistryEntry<any> at the storage boundary: React component types
-  // are not covariant in their props, so DSImpl<N> isn't assignable to
-  // DSImpl<any> structurally. Type safety is preserved at the public API
-  // (registerDSComponent, useDSComponent) where N is concrete.
   shipped.set(name, {
-    default: opts.default,
+    default: opts.default as ComponentType<never>,
     variants,
     knownVariants,
     aliases,
-  } as RegistryEntry<any>);
+  });
 }
 
 /**
@@ -95,16 +101,13 @@ export function resolveAlias<N extends DSComponentName>(
   variant: string | undefined,
 ): DSVariant<N> | undefined {
   if (!variant) return undefined;
-  const entry = shipped.get(name);
-  const canonical = entry?.aliases.get(variant);
-  return (canonical as DSVariant<N> | undefined) ?? (variant as DSVariant<N>);
+  const canonical = shipped.get(name)?.aliases.get(variant);
+  return (canonical ?? variant) as DSVariant<N>;
 }
 
 /** Lookup a shipped variant impl (post-alias-resolution). */
 export function shippedFor<N extends DSComponentName>(name: N, variant: string): DSImpl<N> | undefined {
-  // The registry map is typed `<any>` to permit heterogeneous entries;
-  // the `as` cast restores the per-N relationship at the boundary.
-  return shipped.get(name)?.variants.get(variant as any) as DSImpl<N> | undefined;
+  return shipped.get(name)?.variants.get(variant) as DSImpl<N> | undefined;
 }
 
 /**

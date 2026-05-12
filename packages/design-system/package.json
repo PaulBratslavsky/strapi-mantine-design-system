@@ -67,8 +67,12 @@
   },
   "scripts": {
     "build": "vite build",
+    "check": "yarn test:ts && yarn lint:eslint && yarn test:unit:migration",
+    "test:unit:migration": "jest -c jest.config.mjs --testPathPattern='(resolver|/__tests__/migration)'",
     "clean": "rimraf dist node_modules",
     "lint": "oxlint .",
+    "lint:eslint": "npx --no-install eslint src/resolver src/utilities/DesignSystemProvider.tsx src/index.ts module.d.ts",
+    "lint:eslint:fix": "npx --no-install eslint src/resolver src/utilities/DesignSystemProvider.tsx src/index.ts module.d.ts --fix",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt .",
     "test:ts": "tsc --noEmit",

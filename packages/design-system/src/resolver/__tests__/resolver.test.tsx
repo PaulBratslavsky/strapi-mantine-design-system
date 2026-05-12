@@ -10,7 +10,7 @@
  */
 import * as React from 'react';
 
-import { render, renderHook } from '@testing-library/react';
+import { render, renderHook, screen } from '@testing-library/react';
 
 import {
   DEFAULT,
@@ -41,10 +41,13 @@ declare module '../types' {
   }
 }
 
-const ShippedDefault: React.FC<{ id: string }> = ({ id }) => <span data-impl="shipped-default" data-id={id} />;
-const ShippedPrimary: React.FC<{ id: string }> = ({ id }) => <span data-impl="shipped-primary" data-id={id} />;
-const Override: React.FC<{ id: string }> = ({ id }) => <span data-impl="override" data-id={id} />;
-const OverrideInner: React.FC<{ id: string }> = ({ id }) => <span data-impl="override-inner" data-id={id} />;
+// Each impl encodes its identity in the testid prefix, and the received prop
+// in the testid suffix. That way one `screen.getByTestId('override-x')` proves
+// both "the override was used" AND "the prop was passed through."
+const ShippedDefault: React.FC<{ id: string }> = ({ id }) => <span data-testid={`shipped-default-${id}`} />;
+const ShippedPrimary: React.FC<{ id: string }> = ({ id }) => <span data-testid={`shipped-primary-${id}`} />;
+const Override: React.FC<{ id: string }> = ({ id }) => <span data-testid={`override-${id}`} />;
+const OverrideInner: React.FC<{ id: string }> = ({ id }) => <span data-testid={`override-inner-${id}`} />;
 
 beforeEach(() => {
   _resetRegistryForTests();
@@ -132,27 +135,33 @@ describe('useDSComponent', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <DSProvider components={{ __Sentinel: { danger: Override } }}>{children}</DSProvider>
     );
-    // 'destructive' is an alias for 'danger' (registered in beforeEach)
-    const { result } = renderHook(() => useDSComponent('__Sentinel', 'destructive' as any), { wrapper });
+    // 'destructive' is an alias for 'danger' (registered in beforeEach). The
+    // cast widens through `unknown` because alias names aren't in the
+    // statically-known variant union; the lookup happens at runtime.
+    const { result } = renderHook(
+      () => useDSComponent('__Sentinel', 'destructive' as unknown as 'primary' | 'danger'),
+      { wrapper },
+    );
     expect(result.current).toBe(Override);
   });
 
   it('renders end-to-end through DSProvider', () => {
-    const { container } = render(
+    render(
       <DSProvider components={{ __Sentinel: { primary: Override } }}>
         <Renderer variant="primary" id="x" />
       </DSProvider>,
     );
-    expect(container.querySelector('[data-impl="override"]')).not.toBeNull();
-    expect(container.querySelector('[data-id="x"]')).not.toBeNull();
+    // Single getByTestId proves both the override was used (testid prefix)
+    // AND the prop was passed through (testid suffix).
+    expect(screen.getByTestId('override-x')).toBeInTheDocument();
   });
 });
 
 // Helper for the end-to-end render assertion.
-function Renderer({ variant, id }: { variant: 'primary' | 'danger'; id: string }) {
+const Renderer = ({ variant, id }: { variant: 'primary' | 'danger'; id: string }) => {
   const Resolved = useDSComponent('__Sentinel', variant);
   return <Resolved id={id} />;
-}
+};
 
 /* -------------------------------------------------------------------------- */
 /* Append-only contract                                                       */

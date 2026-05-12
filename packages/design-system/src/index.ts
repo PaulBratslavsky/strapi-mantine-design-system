@@ -68,3 +68,9 @@ export * from './utilities/VisuallyHidden';
  * Primitives re-exports
  * -----------------------------------------------------------------------------------------------*/
 export { useFilter, useCollator, type Filter, useCallbackRef, composeEventHandlers } from '@strapi/ui-primitives';
+
+/* -------------------------------------------------------------------------------------------------
+ * Resolver — WordPress-style component substitution. See notes/ds-migration/principles.md
+ * for the contract and the "Mantine first, resolver last" guidance.
+ * -----------------------------------------------------------------------------------------------*/
+export * from './resolver';

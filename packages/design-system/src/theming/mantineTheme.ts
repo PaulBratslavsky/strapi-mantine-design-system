@@ -59,6 +59,29 @@ export const mantineTheme = createTheme({
       'var(--strapi-color-neutral800)',
     ],
   },
+  /*
+   * Breakpoints — Strapi's `initial | small | medium | large` names are added
+   * alongside Mantine's defaults so existing `<Box padding={{ medium: 2 }}>`
+   * call sites trigger at exactly the same pixel boundaries they did under
+   * styled-components (small=520px, medium=768px, large=1080px). The Mantine
+   * defaults stay present so internal Mantine components that reference
+   * `theme.breakpoints.sm` etc. keep working.
+   *
+   * Type augmentation lives in `module.d.ts` (MantineThemeSizesOverride).
+   */
+  breakpoints: {
+    xs: '36em',
+    sm: '48em',
+    md: '62em',
+    lg: '75em',
+    xl: '88em',
+    // `initial` = 0 means the rule always matches; Mantine emits it as
+    // `@media (min-width: 0em)` which is effectively the base value.
+    initial: '0em',
+    small: '32.5em', // 520px (Strapi)
+    medium: '48em', // 768px (Strapi)
+    large: '67.5em', // 1080px (Strapi)
+  },
   spacing: {
     xs: 'var(--strapi-space-1)',
     sm: 'var(--strapi-space-2)',

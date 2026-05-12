@@ -18,4 +18,8 @@
  *
  * See `theming/README.md` for the full override hierarchy and examples.
  */
+// Side-effect import: brings the @mantine/core breakpoint type augmentation
+// into scope wherever the design-system is consumed.
+import './mantine-augmentation';
+
 export { mantineTheme } from './mantineTheme';

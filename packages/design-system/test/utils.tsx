@@ -39,3 +39,22 @@ export const render = (
 export type { RenderOptions, RenderRTLResult, RenderResult };
 
 export { within, type RenderHookOptions, renderHook, screen, fireEvent, waitFor } from '@testing-library/react';
+
+/**
+ * Returns the first child of `container` that is not Mantine's injected
+ * `<style data-mantine-styles>` element. Use in tests that previously read
+ * `container.firstChild` or `container.children[0]` to get at the rendered
+ * component root.
+ *
+ * Mantine's `<MantineProvider>` emits a single `<style>` tag carrying the
+ * theme's CSS-variable definitions at render time. Tests written against
+ * the styled-components substrate (where no such element existed) need to
+ * skip past it to inspect the actual component output.
+ */
+export const getRoot = (container: HTMLElement): HTMLElement => {
+  const root = Array.from(container.children).find(
+    (el) => !(el instanceof HTMLStyleElement) && !el.hasAttribute('data-mantine-styles'),
+  );
+  if (!root) throw new Error('getRoot: no non-style child found in container');
+  return root as HTMLElement;
+};

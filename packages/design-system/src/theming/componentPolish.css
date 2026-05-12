@@ -23,5 +23,14 @@
  * --------------------------------------------------------------------------
  */
 @layer strapi-components {
-  /* Reserved — see header comment. */
+  /* === Button — Strapi defaults that ship for every consumer ============ *
+   * Bold label text — preserved from the legacy Strapi Button which used
+   * `fontWeight="bold"`. Every Strapi consumer expects buttons to have
+   * confident-weight labels by default. Override at @layer app if you want
+   * lighter weights.
+   * ======================================================================
+   */
+  .mantine-Button-label {
+    font-weight: 600;
+  }
 }

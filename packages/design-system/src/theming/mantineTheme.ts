@@ -94,29 +94,27 @@ export const mantineTheme = createTheme({
   },
   /*
    * Component-level theming — applies to every Mantine component instance.
-   * This is override-surface 4 (theme.components.<Name>) per principles.md.
+   * Override-surface 4 (theme.components.<Name>) per principles.md.
    *
-   * We use Mantine's `.extend({...})` factory rather than a plain object so
-   * TypeScript narrows the prop types correctly. Mantine's recommended
-   * pattern per their theme-object docs.
+   * Split rule (Option A):
+   *   - JS (here) owns **Mantine wiring** that only the JS theme can do:
+   *     defaultProps, classNames assignment, vars callbacks that read
+   *     React props.
+   *   - CSS (componentPolish.css, app-theme.css) owns **all visuals** —
+   *     anything you could express with a stylesheet. That includes
+   *     pseudo-classes, layered overrides, color-mix, and static visual
+   *     touches like fontWeight.
    *
-   * Consumers can further override at finer surfaces (className, styles prop,
-   * etc.) or completely swap via the resolver (surface 6).
+   * Why split it this way: Mantine's docs recommend CSS Modules as the
+   * primary styling mechanism. Keeping JS focused on the things only JS
+   * can do (defaultProps, prop-driven vars) gives one clear answer to
+   * "where does this rule live?".
+   *
+   * Currently no Mantine component needs prop defaults — Mantine's own
+   * defaults are sensible enough. This block stays as a template for
+   * future phases when, e.g., TextInput wants `defaultProps: { size: 'md' }`.
    */
   components: {
-    Button: Button.extend({
-      defaultProps: {
-        // Use Mantine's default radius scale via our `--strapi-radius` token.
-        // Brand-specific overrides (e.g. larger radius, halo, custom padding)
-        // belong in the consuming app's @layer app — see
-        // packages/core/admin/admin/src/styles/app-theme.css.
-        radius: 'sm',
-      },
-      styles: {
-        label: {
-          fontWeight: 600,
-        },
-      },
-    }),
+    Button: Button.extend({}),
   },
 });

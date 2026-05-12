@@ -86,10 +86,59 @@ See `notes/ds-migration/principles.md` in the parent repo for the full rationale
 
 ### Adding a per-component override
 
-Two places to touch:
+The split rule (Option A — slightly stricter than Mantine's docs literally prescribe, but operationally clearer):
 
-1. **`mantineTheme.ts`** → `components.<Name>` for prop defaults and inline styles that don't need pseudo-classes.
-2. **`componentPolish.css`** → for `:hover`, `:active`, `:focus-visible`, `[data-variant=...]`-specific rules. Wrap in `@layer strapi-components`.
+1. **`mantineTheme.ts`** owns **Mantine wiring** only — things only JS can do:
+   - `defaultProps` (no other place sets these)
+   - `classNames` assignment (if you want to use class-based selectors)
+   - `vars: (theme, props) => ({...})` callbacks (the only mechanism that reads React props)
+
+2. **`componentPolish.css`** (DS-default) or **`app-theme.css`** (consumer override) owns **all visuals** — anything you could express with a stylesheet:
+   - All `:hover`, `:active`, `:focus-visible`, `:disabled` states
+   - `[data-variant=...]`-specific rules
+   - `color-mix()`, `:has()`, any modern CSS feature
+   - Static visuals too (fontWeight, letterSpacing) — keeps all visual rules in one mental category
+
+**Why this strict split** (when Mantine's docs allow small inline `styles` objects too):
+
+- One mental model: "is this a Mantine prop / wiring concern? → JS. Is this how it looks? → CSS."
+- All visual changes happen in a single file you can scan. No "wait, which file wins?" moments.
+- Refactors don't move rules between languages.
+- CSS file is the obvious place a designer or styling-focused dev looks.
+
+### This is an internal convention, not a consumer constraint
+
+Option A applies to **how the DS itself and the Strapi admin write rules in this repo**. Consumers can use any Mantine API they want:
+
+```tsx
+// All of these continue to work for consumers — Mantine APIs are not blocked
+<Button styles={{ root: { background: 'red' } }} />          // surface 2
+<Button className="my-utility" />                            // surface 1
+<Button component={Link} to="/x">…</Button>                  // surface 3
+
+// Compose your own Mantine theme on top of ours
+import { mantineTheme as strapiTheme } from '@strapi/design-system';
+import { mergeMantineTheme } from '@mantine/core';
+const myTheme = mergeMantineTheme(strapiTheme, {
+  components: {
+    Button: Button.extend({ defaultProps: { size: 'lg' } }),
+  },
+});
+
+// Swap the implementation entirely (resolver — surface 6)
+<DSProvider components={{ Button: { default: MyCustomButton } }}>
+```
+
+Option A is just our **maintenance rule** for keeping the DS + admin codebases consistent. A third-party plugin author or app developer is free to use whatever Mantine API fits their use case.
+
+**Where polish goes:**
+
+| Polish type | Where it lives |
+|---|---|
+| Strapi-default for every consumer (e.g. bold button labels) | `componentPolish.css` (`@layer strapi-components`) |
+| This-installation only (e.g. brand halo, custom padding) | `app-theme.css` in the consuming app (`@layer app`) |
+| Tied to a React prop value | `Button.extend({ vars: (theme, { color }) => ({ root: {...} }) })` in JS, then CSS rule that reads the var |
+| Mantine's prop default (e.g. `size: 'md'`) | `Button.extend({ defaultProps: {...} })` in JS — only place this works |
 
 ### Mantine Styles overview reference
 
@@ -98,3 +147,5 @@ Mantine docs on its styles system: <https://mantine.dev/styles/styles-overview/>
 - **Styles API**: every Mantine component exposes element-level class names like `mantine-Button-root`, `mantine-Button-section`, `mantine-Button-label`. These are stable contract names — safe to target from CSS.
 - **CSS variables**: per-instance variables (`--button-bg`, `--button-height`) set on the rendered element. Override them via `style`, `styles`, or `vars` props/configs.
 - **`theme.components.<Name>`**: app-wide defaults for any Mantine component.
+
+Mantine's docs hierarchy ranks the four APIs as: (1) component props → (2) CSS Modules → (3) style props (max 3-4) → (4) inline `style`. Our Option A simplification: combine 2-4 into "CSS Modules / external stylesheet for visuals; component props via `defaultProps` for wiring."

@@ -1,15 +1,18 @@
 /**
  * CSS side-effect imports — order matters.
  *
- *   1. layers.css   — declares cascade-layer order before anything else loads.
- *   2. mantine CSS  — Mantine 7 ships a pre-layered variant that drops into @layer mantine.
- *   3. tokens.css   — our --strapi-* custom properties, wrapped in @layer strapi-tokens.
+ *   1. theming/layers.css            — cascade-layer declaration + @import Mantine
+ *   2. theming/tokens.css            — --strapi-* CSS vars in @layer strapi-tokens
+ *   3. styles/global.css             — base reset + body typography in @layer reset
+ *   4. theming/componentPolish.css   — per-component overrides in @layer strapi-components
  *
  * sideEffects allowlist in package.json keeps these imports from being tree-shaken.
+ * See src/theming/README.md for how the theming module is organized.
  * -----------------------------------------------------------------------------------------------*/
-import './styles/layers.css';
-import '@mantine/core/styles.layer.css';
-import './styles/tokens.css';
+import './theming/layers.css';
+import './theming/tokens.css';
+import './styles/global.css';
+import './theming/componentPolish.css';
 
 /**
  * Styled Components Module Declaration
@@ -74,3 +77,9 @@ export { useFilter, useCollator, type Filter, useCallbackRef, composeEventHandle
  * for the contract and the "Mantine first, resolver last" guidance.
  * -----------------------------------------------------------------------------------------------*/
 export * from './resolver';
+
+/* -------------------------------------------------------------------------------------------------
+ * Theming — Mantine theme object, public for consumers who want to compose their own theme on top.
+ * See src/theming/README.md for the override hierarchy and examples.
+ * -----------------------------------------------------------------------------------------------*/
+export * from './theming';

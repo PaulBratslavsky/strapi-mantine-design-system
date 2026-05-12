@@ -7,7 +7,7 @@ import { PolymorphicRef, PropsToTransientProps } from '../../types';
 import { AccessibleIcon } from '../../utilities/AccessibleIcon';
 import { forwardRef } from '../../utilities/forwardRef';
 import { ButtonProps } from '../Button';
-import { getActiveStyle, getDisabledStyle, getHoverStyle, getVariantStyle } from '../Button/utils';
+import { getActiveStyle, getDisabledStyle, getHoverStyle, getVariantStyle } from '../Button/legacy/utils';
 import { Tooltip } from '../Tooltip';
 
 type IconButtonProps<C extends React.ElementType = 'button'> = FlexProps<C> &

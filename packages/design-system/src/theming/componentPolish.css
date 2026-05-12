@@ -1,0 +1,27 @@
+/**
+ * Component polish for Mantine-backed Strapi components.
+ *
+ * Wrapped in @layer strapi-components — higher priority than @layer mantine
+ * (so we can refine Mantine's defaults) but lower than @layer app (consumer
+ * apps can still override anything here).
+ *
+ * Selectors target our stable Styles API hooks (`data-strapi-button`, etc.)
+ * rather than Mantine's internal class names — those data-* attributes are
+ * documented public API per principles.md.
+ *
+ * --------------------------------------------------------------------------
+ * Currently intentionally minimal.
+ *
+ * The DS ships Mantine + Strapi tokens with no bespoke brand polish at the
+ * component level. Brand-specific behavior (button halo, extra padding,
+ * radii beyond the default) lives in the consuming app's @layer app override
+ * — see packages/core/admin/admin/src/styles/app-theme.css in the Strapi
+ * monorepo for a worked example.
+ *
+ * Add rules here only when the change should be a Strapi-default across
+ * every consumer of @strapi/design-system.
+ * --------------------------------------------------------------------------
+ */
+@layer strapi-components {
+  /* Reserved — see header comment. */
+}

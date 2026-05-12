@@ -47,20 +47,23 @@ type TriggerProps = TriggerPropsWithButton | TriggerPropsWithIconButton;
 
 const MenuTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
   ({ label, endIcon = <CaretDown width="1.2rem" height="1.2rem" aria-hidden />, tag = Button, icon, ...rest }, ref) => {
+    // ref is forwarded separately rather than spread through ButtonProps —
+    // Phase 3 dropped `ref` from ButtonProps to align with React.forwardRef's
+    // typing convention. Passing ref as a prop at the JSX site works because
+    // both <Button> and <IconButton> are forwardRef components.
     const props: ButtonProps = {
       ...rest,
-      ref,
       type: 'button',
     };
 
     return (
       <DropdownMenu.Trigger asChild disabled={props.disabled}>
         {tag === IconButton ? (
-          <IconButton label={label as string} variant="tertiary" {...props}>
+          <IconButton label={label as string} variant="tertiary" ref={ref} {...props}>
             {icon}
           </IconButton>
         ) : (
-          <Button endIcon={endIcon} variant="ghost" {...props} />
+          <Button endIcon={endIcon} variant="ghost" ref={ref} {...props} />
         )}
       </DropdownMenu.Trigger>
     );

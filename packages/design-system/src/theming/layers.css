@@ -15,4 +15,22 @@
  * Defined here so the order is set before any CSS that uses these layer names
  * is loaded — order is determined by first declaration.
  */
+/*
+ * Layer-order declaration MUST come before the Mantine @import, because CSS
+ * cascade layers are ordered by first-encounter. If Mantine's `@layer mantine
+ * { ... }` rules arrive first, `mantine` becomes the lowest-priority layer
+ * and our `reset` layer (declared later) ends up ABOVE it — wrong.
+ *
+ * CSS Cascade Layers Level 1 allows the `@layer` statement before `@import`,
+ * even though normal @import rules must come first in a stylesheet.
+ */
 @layer reset, mantine, strapi-tokens, strapi-components, app;
+
+/*
+ * Pulling Mantine's pre-built stylesheet in via CSS @import (not a JS
+ * side-effect import) so Vite bundles it into our dist/index.css. The
+ * earlier JS-level import './@mantine/core/styles.layer.css' got externalized
+ * by vite-plugin-externalize-deps and never resolved on the consumer side,
+ * leaving Mantine components unstyled.
+ */
+@import url('@mantine/core/styles.layer.css');

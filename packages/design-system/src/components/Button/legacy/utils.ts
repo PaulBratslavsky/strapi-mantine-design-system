@@ -12,7 +12,7 @@ import {
   DANGER_LIGHT,
   SUCCESS_LIGHT,
   type ButtonVariant,
-} from './constants';
+} from '../constants';
 
 export const getVariantColorName = (variant: ButtonVariant): 'success' | 'danger' | 'neutral' | 'primary' => {
   if (variant === SUCCESS_LIGHT || variant === DANGER_LIGHT) {

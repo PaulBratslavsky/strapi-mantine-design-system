@@ -144,4 +144,30 @@
     border-radius: var(--strapi-radius);
     z-index: 1000;
   }
+
+  /* === Modal — Strapi visual tokens ===================================== *
+   * Legacy emitted: overlay = neutral800 @ 0.2 opacity, content =
+   * neutral0 bg + popupShadow + theme.borderRadius + zIndices.modal (310).
+   * Mantine's Modal renders an overlay and content panel; target those
+   * via Mantine's stable class names. data-strapi-modal-header /
+   * data-strapi-modal-footer hooks come from MantineModal's compound
+   * parts.
+   * ====================================================================== */
+  .mantine-Modal-overlay {
+    background: color-mix(in srgb, var(--strapi-color-neutral800) 20%, transparent);
+  }
+  .mantine-Modal-content {
+    box-shadow: var(--strapi-shadow-popup);
+    background: var(--strapi-color-neutral0);
+  }
+  [data-strapi-modal-header] {
+    border-bottom: solid 1px var(--strapi-color-neutral150);
+  }
+  [data-strapi-modal-footer] {
+    border-top: solid 1px var(--strapi-color-neutral150);
+  }
+  [data-strapi-modal-body] {
+    padding-inline: var(--strapi-space-7);
+    padding-block: var(--strapi-space-8);
+  }
 }

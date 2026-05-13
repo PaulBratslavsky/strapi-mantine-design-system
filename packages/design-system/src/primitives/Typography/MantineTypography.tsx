@@ -1,37 +1,40 @@
 /**
- * MantineTypography — Mantine-backed implementation of Strapi's <Typography>.
+ * MantineTypography — translation layer over Mantine's <Text> and <Title>.
  *
- * Composes through Strapi `<Box>` (which routes to MantineBox), so all 60+
- * Box-inherited style props (margin, padding, fontSize override, etc.)
- * translate via the shared `translateBoxProps` helper without duplication.
+ * Each Strapi `variant` dispatches to the appropriate Mantine native:
+ *   alpha   → <Title order={1}>
+ *   beta    → <Title order={2}>
+ *   delta   → <Title order={3}>
+ *   epsilon → <Title order={4}>
+ *   omega   → <Text>                 (default body)
+ *   pi      → <Text size="xs" fw={700} tt="uppercase">
+ *   sigma   → <Text size="xs">
  *
- * Typography-specific concerns:
- *   - `variant`  → emitted as `data-strapi-typography-variant=<name>` and
- *     styled via a per-variant CSS rule in `theming/componentPolish.css`
- *     (font-size + line-height + font-weight + media queries — drop-in for
- *     what the legacy styled-components Typography emitted).
- *   - `textColor` → mapped to Box's `color` prop (token resolution shared
- *     across the DS).
- *   - `textDecoration` → emitted as inline style (Mantine Box has no slot
- *     for it; legacy used styled-components for this too).
- *   - `ellipsis` → emits `data-strapi-typography-ellipsis` hook; CSS rule
- *     applies the legacy `display: block; white-space: nowrap; overflow:
- *     hidden; text-overflow: ellipsis` block.
+ * Strapi's exact legacy pixel sizes are NOT recreated here — Mantine's
+ * defaults win. If a specific consumer install needs to match legacy
+ * pixels exactly, configure `headings` and `fontSizes` in
+ * `theming/mantineTheme.ts` so every Mantine consumer picks up the
+ * change in one place. We deliberately do NOT do per-variant CSS
+ * overrides here (see project-true-mantine-intent: "if Mantine ships
+ * it, configure Mantine, don't shadow with custom CSS").
  *
- * Why CSS rules instead of dispatching to Mantine's `<Title>` / `<Text>`:
- * Mantine's typography components apply their own font-weight/line-height
- * defaults that don't match Strapi's per-variant pixel values. Dispatching
- * would push us into a translation-table-with-overrides which inevitably
- * leaks (e.g. Mantine `<Title order={1}>` ships its own h1 reset that fights
- * with Strapi's exact 2.8rem/3.2rem responsive pair). A data-attribute + CSS
- * rule preserves the legacy emission byte-for-byte and keeps the cascade
- * compatible with consumer styled(Typography) wrappers.
+ * Strapi prop API preserved:
+ *   - All Box-inherited props (margin, padding, w, h, etc.) translate
+ *     through the shared translateBoxProps and flow onto Mantine Text/
+ *     Title (which extend Mantine's Box style-prop surface).
+ *   - textColor      → Mantine `c` (takes precedence over inherited Box color)
+ *   - textDecoration → Mantine `td`
+ *   - ellipsis       → Mantine `truncate="end"`
+ *   - tag            → Mantine `component`
  *
- * Default tag is 'span' (matches legacy). Consumers pass `tag` for headings.
+ * Strapi props with no Mantine equivalent fall through to inline style
+ * via translateBoxProps (cursor, pointerEvents, transition, etc.).
  */
 import * as React from 'react';
 
-import { Box } from '../Box';
+import { Text, Title, type TextProps, type TitleProps } from '@mantine/core';
+
+import { resolveColor, translateBoxProps } from '../Box/translate';
 
 import type { TypographyProps, TransientTypographyProps } from './legacy/LegacyTypography';
 
@@ -41,45 +44,75 @@ type MantineTypographyProps = TypographyProps & {
   style?: React.CSSProperties;
 };
 
+const TITLE_ORDER: Partial<Record<string, 1 | 2 | 3 | 4 | 5 | 6>> = {
+  alpha: 1,
+  beta: 2,
+  delta: 3,
+  epsilon: 4,
+};
+
+const TEXT_VARIANT: Partial<Record<string, { size?: string; fw?: number | string; tt?: string }>> = {
+  omega: {}, // Mantine default body
+  pi: { size: 'xs', fw: 700, tt: 'uppercase' },
+  sigma: { size: 'xs' },
+};
+
 const MantineTypography = React.forwardRef<HTMLElement, MantineTypographyProps>((props, ref) => {
   const {
     variant = 'omega',
     textColor,
     textDecoration,
     ellipsis,
-    style,
     tag,
     ...rest
   } = props as MantineTypographyProps & TransientTypographyProps;
 
-  // Pull textDecoration into inline style; Mantine Box has no slot for it.
-  // (legacy emitted it via styled-components handleResponsiveValues, which
-  // collapsed to inline CSS in the generated class.)
-  const inlineStyle: React.CSSProperties = { ...style };
-  if (textDecoration != null) {
-    if (typeof textDecoration === 'object' && 'initial' in textDecoration) {
-      inlineStyle.textDecoration = (textDecoration as { initial?: string })
-        .initial as React.CSSProperties['textDecoration'];
-    } else {
-      inlineStyle.textDecoration = textDecoration as React.CSSProperties['textDecoration'];
-    }
+  // Run all Box-inherited props through the shared translation. Returns
+  // Mantine-named style props (m, p, c, bg…), inline-style fallbacks for
+  // Strapi-only props (cursor, pointerEvents…), and remaining unknowns.
+  const { mantineProps, inlineStyle, rest: boxRest } = translateBoxProps(rest as Record<string, unknown>);
+
+  // Typography-specific overrides — textColor takes precedence over any
+  // Box-inherited color resolution.
+  const typographyOverrides: Record<string, unknown> = {};
+  if (typeof textColor === 'string') {
+    typographyOverrides.c = resolveColor(textColor);
+  }
+  if (typeof textDecoration === 'string') {
+    typographyOverrides.td = textDecoration;
   }
 
-  // textColor maps onto Box's `color` prop (string-token resolution shared).
-  // If consumer didn't pass textColor we default to 'currentcolor' so headings
-  // inherit from their context — matches legacy behavior.
-  const colorProp = textColor ?? 'currentcolor';
+  const component = tag as React.ElementType | undefined;
+  const order = TITLE_ORDER[variant];
+
+  if (order != null) {
+    return (
+      <Title
+        ref={ref as React.Ref<HTMLHeadingElement>}
+        order={order}
+        component={component}
+        {...(mantineProps as Partial<TitleProps>)}
+        {...(typographyOverrides as Partial<TitleProps>)}
+        style={inlineStyle}
+        {...(boxRest as Record<string, unknown>)}
+      />
+    );
+  }
+
+  const textConfig = TEXT_VARIANT[variant] ?? {};
 
   return (
-    <Box
-      ref={ref}
-      tag={tag ?? 'span'}
-      color={colorProp}
+    <Text
+      ref={ref as React.Ref<HTMLParagraphElement>}
+      size={textConfig.size}
+      fw={textConfig.fw}
+      tt={textConfig.tt as TextProps['tt']}
+      truncate={ellipsis ? 'end' : undefined}
+      component={component}
+      {...(mantineProps as Partial<TextProps>)}
+      {...(typographyOverrides as Partial<TextProps>)}
       style={inlineStyle}
-      data-strapi-typography=""
-      data-strapi-typography-variant={variant}
-      data-strapi-typography-ellipsis={ellipsis ? '' : undefined}
-      {...(rest as Record<string, unknown>)}
+      {...(boxRest as Record<string, unknown>)}
     />
   );
 });

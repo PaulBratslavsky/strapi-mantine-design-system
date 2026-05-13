@@ -1,12 +1,21 @@
+/**
+ * Toggle — drop-in port off styled-components.
+ *
+ * Two-option pill toggle (Off / On) backed by a hidden checkbox input.
+ * Visual rules — focus ring via `:focus-within`, hidden absolute-positioned
+ * input, per-option padding — moved to `componentPolish.css` keyed on
+ * `[data-strapi-toggle*]` hooks.
+ *
+ * The inputFocusStyle() shared mixin (from `themes/utils.ts`) is replicated
+ * inline here via a CSS rule on `[data-strapi-toggle]:focus-within` so we
+ * don't drag styled-components in via the themes import path.
+ */
 /* eslint-disable no-nested-ternary */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
 import { useControllableState } from '../../hooks/useControllableState';
-import { Flex, FlexComponent } from '../../primitives/Flex';
+import { Flex } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
-import { inputFocusStyle } from '../../themes';
 import { Field, useField } from '../Field';
 
 interface ToggleProps
@@ -19,10 +28,6 @@ interface ToggleProps
 
 type ToggleInputElement = HTMLInputElement;
 
-/**
- * TODO: This should probably follow the switch button pattern
- * as seen – https://www.w3.org/WAI/ARIA/apg/patterns/switch/examples/switch-button/
- */
 const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
   (
     {
@@ -39,9 +44,7 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
     },
     forwardedRef,
   ) => {
-    const [checked = false, setChecked] = useControllableState<boolean | null>({
-      prop: checkedProp,
-    });
+    const [checked = false, setChecked] = useControllableState<boolean | null>({ prop: checkedProp });
 
     const isFalseyChecked = checked !== null && !checked;
 
@@ -52,14 +55,11 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
     const required = field.required || requiredProp;
 
     let ariaDescription: string | undefined;
-    if (error) {
-      ariaDescription = `${id}-error`;
-    } else if (field.hint) {
-      ariaDescription = `${id}-hint`;
-    }
+    if (error) ariaDescription = `${id}-error`;
+    else if (field.hint) ariaDescription = `${id}-hint`;
 
     return (
-      <ToggleWrapper
+      <Flex
         position="relative"
         hasRadius
         padding={1}
@@ -69,9 +69,10 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
         borderColor={hasError ? 'danger600' : 'neutral200'}
         wrap="wrap"
         cursor={disabled ? 'not-allowed' : 'pointer'}
-        $hasError={hasError}
+        data-strapi-toggle=""
+        data-strapi-toggle-error={hasError ? '' : undefined}
       >
-        <ToggleOption
+        <Flex
           hasRadius
           flex="1 1 50%"
           paddingTop={2}
@@ -89,6 +90,7 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
                   ? 'neutral150'
                   : 'neutral100'
           }
+          data-strapi-toggle-option=""
         >
           <Typography
             variant="pi"
@@ -98,8 +100,8 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
           >
             {offLabel}
           </Typography>
-        </ToggleOption>
-        <ToggleOption
+        </Flex>
+        <Flex
           hasRadius
           flex="1 1 50%"
           paddingLeft={3}
@@ -109,6 +111,7 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
           borderColor={
             disabled && checked ? 'neutral300' : checked ? 'neutral200' : disabled ? 'neutral150' : 'neutral100'
           }
+          data-strapi-toggle-option=""
         >
           <Typography
             variant="pi"
@@ -118,8 +121,8 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
           >
             {onLabel}
           </Typography>
-        </ToggleOption>
-        <Input
+        </Flex>
+        <input
           {...props}
           id={id}
           name={name}
@@ -134,29 +137,12 @@ const Toggle = React.forwardRef<ToggleInputElement, ToggleProps>(
           aria-disabled={disabled}
           checked={Boolean(checked)}
           aria-describedby={ariaDescription}
+          data-strapi-toggle-input=""
         />
-      </ToggleWrapper>
+      </Flex>
     );
   },
 );
-
-const ToggleWrapper = styled<FlexComponent>(Flex)<{ $hasError?: boolean }>`
-  ${inputFocusStyle()}
-`;
-
-const ToggleOption = styled<FlexComponent>(Flex)`
-  padding-block: 0.6rem;
-`;
-
-const Input = styled.input`
-  height: 100%;
-  left: 0;
-  opacity: 0;
-  position: absolute;
-  top: 0;
-  z-index: 0;
-  width: 100%;
-`;
 
 export { Toggle };
 export type { ToggleProps };

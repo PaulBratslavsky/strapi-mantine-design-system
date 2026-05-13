@@ -170,4 +170,351 @@
     padding-inline: var(--strapi-space-7);
     padding-block: var(--strapi-space-8);
   }
+
+  /* === Divider — 1px separator, doesn't shrink in flex parents ============ */
+  [data-strapi-divider] {
+    height: 1px;
+    border: none;
+    flex-shrink: 0;
+  }
+
+  /* === Loader — spinning SVG with optional small size ===================== */
+  @keyframes strapi-loader-rotation {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(359deg); }
+  }
+  [data-strapi-loader] {
+    animation: strapi-loader-rotation 1s infinite linear;
+    will-change: transform;
+  }
+  [data-strapi-loader][data-strapi-loader-size='small'] {
+    width: var(--strapi-space-6);
+    height: var(--strapi-space-6);
+  }
+
+  /* === ProgressBar — Radix-based progress with per-size dimensions ======== */
+  [data-strapi-progress-bar] {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--strapi-color-neutral600);
+    border-radius: var(--strapi-radius);
+    /* Safari overflow clipping fix */
+    transform: translateZ(0);
+  }
+  [data-strapi-progress-bar][data-strapi-progress-bar-size='S'] {
+    width: 7.8rem;
+    height: 0.4rem;
+  }
+  [data-strapi-progress-bar][data-strapi-progress-bar-size='M'] {
+    width: 10.2rem;
+    height: 0.8rem;
+  }
+  [data-strapi-progress-bar-indicator] {
+    background-color: var(--strapi-color-neutral0);
+    border-radius: var(--strapi-radius);
+    width: 100%;
+    height: 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-progress-bar-indicator] {
+      transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  /* === BaseLink — no decoration, color: inherit on :visited =============== */
+  [data-strapi-base-link] {
+    text-decoration: none;
+  }
+  [data-strapi-base-link]:visited {
+    color: inherit;
+  }
+
+  /* === SkipToContent — a11y skip link; off-screen until focused =========== */
+  [data-strapi-skip-to-content] {
+    text-decoration: none;
+  }
+  [data-strapi-skip-to-content]:focus {
+    left: var(--strapi-space-3);
+    top: var(--strapi-space-3);
+  }
+
+  /* === Tag — pill with dismiss button + bordered text divider ============= */
+  [data-strapi-tag-text] {
+    color: inherit;
+    border-right: 1px solid var(--strapi-color-primary200);
+    padding-right: var(--strapi-space-2);
+  }
+  [data-strapi-tag-text][data-strapi-tag-disabled] {
+    border-right-color: var(--strapi-color-neutral300);
+  }
+  [data-strapi-tag-button] {
+    display: inline-flex;
+    border: none;
+  }
+  [data-strapi-tag-button] > svg {
+    height: 1.2rem;
+    width: 1.2rem;
+  }
+  [data-strapi-tag-button] > svg path {
+    fill: var(--strapi-color-primary600);
+  }
+  [data-strapi-tag-button][aria-disabled='true'] > svg path {
+    fill: var(--strapi-color-neutral600);
+  }
+  [data-strapi-tag-button-clickable]:hover {
+    cursor: pointer;
+  }
+
+  /* === Badge — pill with per-size padding + border-radius ================= */
+  [data-strapi-badge][data-strapi-badge-size='S'] {
+    border-radius: 2px;
+    padding-block: 0.3rem;
+    padding-inline: var(--strapi-space-1);
+  }
+  [data-strapi-badge][data-strapi-badge-size='M'] {
+    border-radius: var(--strapi-radius);
+    padding-block: 0.7rem;
+    padding-inline: var(--strapi-space-2);
+  }
+
+  /* === Avatar — circular image with fallback + group overlap ============== */
+  [data-strapi-avatar-root] {
+    position: relative;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    overflow: hidden;
+    user-select: none;
+    border-radius: 50%;
+    width: 3.2rem;
+    height: 3.2rem;
+    background-color: var(--strapi-color-primary600);
+    color: var(--strapi-color-neutral0);
+  }
+  [data-strapi-avatar-image] {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-avatar-overlay] {
+      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+  [data-strapi-avatar-preview] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 50%;
+    width: 6.4rem;
+    height: 6.4rem;
+  }
+  /* Group: each subsequent Avatar overlaps the previous by half its width. */
+  [data-strapi-avatar-group] > [data-strapi-avatar-root] + [data-strapi-avatar-root] {
+    margin-left: -1.6rem;
+  }
+
+  /* === Switch — Radix-driven toggle with on/off colors + animated thumb === */
+  [data-strapi-switch-root] {
+    width: 4rem;
+    height: 2.4rem;
+    border-radius: 1.2rem;
+    background-color: var(--strapi-color-danger500);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  [data-strapi-switch-root][data-state='checked'] {
+    background-color: var(--strapi-color-success500);
+  }
+  [data-strapi-switch-root][data-disabled] {
+    background-color: var(--strapi-color-neutral300);
+    cursor: not-allowed;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-switch-root] {
+      transition: background-color 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+  [data-strapi-switch-thumb] {
+    display: block;
+    height: 1.6rem;
+    width: 1.6rem;
+    border-radius: 50%;
+    background-color: var(--strapi-color-neutral0);
+    transform: translateX(4px);
+  }
+  [data-strapi-switch-thumb][data-state='checked'] {
+    transform: translateX(20px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-switch-thumb] {
+      transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+  [data-strapi-switch-label] {
+    color: var(--strapi-color-danger600);
+  }
+  [data-strapi-switch-label][data-state='checked'] {
+    color: var(--strapi-color-success600);
+  }
+  [data-strapi-switch-label][data-disabled='true'] {
+    color: var(--strapi-color-neutral500);
+  }
+
+  /* === Toggle — two-option pill with hidden checkbox input =============== *
+   * Replicates the legacy `inputFocusStyle()` mixin via :focus-within rules
+   * on the wrapper. Hidden absolute-positioned input intercepts keyboard
+   * input; the visible "Off / On" options reflect state via background.
+   */
+  [data-strapi-toggle] {
+    outline: none;
+    box-shadow: none;
+    transition-property: border-color, box-shadow, fill;
+    transition-duration: 0.2s;
+  }
+  [data-strapi-toggle]:focus-within {
+    border: 1px solid var(--strapi-color-primary600);
+    box-shadow: var(--strapi-color-primary600) 0px 0px 0px 2px;
+  }
+  [data-strapi-toggle][data-strapi-toggle-error]:focus-within {
+    border-color: var(--strapi-color-danger600);
+    box-shadow: var(--strapi-color-danger600) 0px 0px 0px 2px;
+  }
+  [data-strapi-toggle-option] {
+    padding-block: 0.6rem;
+  }
+  [data-strapi-toggle-input] {
+    height: 100%;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    z-index: 0;
+    width: 100%;
+  }
+
+  /* === Checkbox — Radix-driven; checked/indeterminate/disabled colors ===== */
+  [data-strapi-checkbox-root] {
+    background: var(--strapi-color-neutral0);
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--strapi-radius);
+    border: 1px solid var(--strapi-color-neutral300);
+    position: relative;
+    z-index: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Keep the box square in flex parents. */
+    flex: 0 0 2rem;
+    padding: 0;
+    cursor: pointer;
+  }
+  [data-strapi-checkbox-root][data-state='checked']:not([data-disabled]),
+  [data-strapi-checkbox-root][data-state='indeterminate']:not([data-disabled]) {
+    border: 1px solid var(--strapi-color-primary600);
+    background-color: var(--strapi-color-primary600);
+  }
+  [data-strapi-checkbox-root][data-disabled] {
+    background-color: var(--strapi-color-neutral200);
+    cursor: not-allowed;
+  }
+  /* 44px touch target (WCAG target-size). */
+  [data-strapi-checkbox-root]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-strapi-checkbox-indicator] {
+    display: inline-flex;
+    pointer-events: auto !important;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+  }
+  [data-strapi-checkbox-indicator][data-disabled] {
+    cursor: not-allowed;
+  }
+
+  /* === Radio — Radix-driven group + item + center-dot indicator =========== */
+  [data-strapi-radio-group] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--strapi-space-3);
+  }
+  [data-strapi-radio-item] {
+    background: var(--strapi-color-neutral0);
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    border-radius: 50%;
+    border: 1px solid var(--strapi-color-neutral300);
+    position: relative;
+    cursor: pointer;
+    z-index: 0;
+    padding: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-radio-item] {
+      transition: border-color 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+  }
+  [data-strapi-radio-item][data-state='checked'] {
+    border: 1px solid var(--strapi-color-primary600);
+  }
+  [data-strapi-radio-item][data-disabled] {
+    cursor: not-allowed;
+    background-color: var(--strapi-color-neutral200);
+  }
+  /* 44px touch target. */
+  [data-strapi-radio-item]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-strapi-radio-indicator] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  [data-strapi-radio-indicator]::after {
+    content: '';
+    display: block;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--strapi-color-primary600);
+  }
+  @keyframes strapi-radio-pop-in {
+    0%   { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-radio-indicator][data-state='checked'] {
+      animation: strapi-radio-pop-in 0.2s ease-out;
+    }
+  }
 }

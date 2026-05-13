@@ -1,28 +1,19 @@
+/**
+ * Tag — drop-in port off styled-components.
+ *
+ * Pill-shaped tag with a label + dismiss icon. The button half had three
+ * styled-components rules (inline-flex, SVG sizing/color, hover cursor);
+ * the text half had a right border divider. Both replaced by `[data-strapi-
+ * tag-button]` and `[data-strapi-tag-text]` rules in `componentPolish.css`.
+ *
+ * Public API and visual output identical: disabled state colors,
+ * primary/neutral palettes, fixed 3.2rem height.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, type BoxComponent } from '../../primitives/Box';
+import { Box } from '../../primitives/Box';
 import { Flex, FlexProps } from '../../primitives/Flex';
-import { Typography, TypographyComponent } from '../../primitives/Typography';
-
-const ButtonBox = styled<BoxComponent<'button'>>(Box)<{ $iconAction: boolean }>`
-  display: inline-flex;
-  border: none;
-
-  & > svg {
-    height: 1.2rem;
-    width: 1.2rem;
-  }
-
-  & > svg path {
-    fill: ${({ theme, ...p }) => (p['aria-disabled'] ? theme.colors.neutral600 : theme.colors.primary600)};
-  }
-
-  &:hover {
-    cursor: ${({ $iconAction }) => ($iconAction ? 'pointer' : 'initial')};
-  }
-`;
+import { Typography } from '../../primitives/Typography';
 
 export interface TagProps extends Omit<FlexProps, 'onClick'> {
   icon: React.ReactNode;
@@ -49,26 +40,27 @@ export const Tag = ({ children, icon, label, disabled = false, onClick, ...props
       height="3.2rem"
       {...props}
     >
-      <TagText $disabled={disabled} variant="pi" fontWeight="bold">
+      <Typography
+        tag="span"
+        variant="pi"
+        fontWeight="bold"
+        data-strapi-tag-text=""
+        data-strapi-tag-disabled={disabled || undefined}
+      >
         {children}
-      </TagText>
-      <ButtonBox
+      </Typography>
+      <Box
         tag="button"
         disabled={disabled}
         aria-disabled={disabled}
         aria-label={label}
         padding={2}
         onClick={handleClick}
-        $iconAction={!!onClick}
+        data-strapi-tag-button=""
+        data-strapi-tag-button-clickable={!!onClick && !disabled ? '' : undefined}
       >
         {icon}
-      </ButtonBox>
+      </Box>
     </Flex>
   );
 };
-
-const TagText = styled<TypographyComponent>(Typography)<{ $disabled: boolean }>`
-  color: inherit;
-  border-right: 1px solid ${({ theme, $disabled }) => ($disabled ? theme.colors.neutral300 : theme.colors.primary200)};
-  padding-right: ${({ theme }) => theme.spaces[2]};
-`;

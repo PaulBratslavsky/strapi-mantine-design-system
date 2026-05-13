@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { DefaultTheme } from 'styled-components';
-
 import { Box, BoxProps } from '../../primitives/Box';
 
 type StatusVariant = 'alternative' | 'danger' | 'neutral' | 'primary' | 'secondary' | 'success' | 'warning';
@@ -27,9 +25,11 @@ const getPadding = (size: StatusSize): { paddingX: BoxProps['paddingTop']; paddi
 };
 
 const Status = ({ variant = 'primary', size = 'M', children, ...props }: StatusProps) => {
-  const backgroundColor = `${variant}100` satisfies keyof DefaultTheme['colors'];
-  const borderColor = `${variant}200` satisfies keyof DefaultTheme['colors'];
-  const textColor = `${variant}600` satisfies keyof DefaultTheme['colors'];
+  // Color tokens follow the Strapi convention `<variant><shade>`; the Box
+  // prop translator resolves these to `var(--strapi-color-<token>)` at render.
+  const backgroundColor = `${variant}100`;
+  const borderColor = `${variant}200`;
+  const textColor = `${variant}600`;
 
   const { paddingX, paddingY } = getPadding(size);
 

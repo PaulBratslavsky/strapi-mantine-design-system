@@ -1,8 +1,13 @@
+/**
+ * BaseLink — drop-in port off styled-components.
+ *
+ * Only styled rules were `text-decoration: none` and `:visited { color:
+ * inherit }`. Both moved to `componentPolish.css` keyed on
+ * `[data-strapi-base-link]`. All disabled / isExternal behavior unchanged.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, BoxComponent, BoxProps } from '../../primitives/Box';
+import { Box, BoxProps } from '../../primitives/Box';
 import { forwardRef } from '../../utilities/forwardRef';
 
 type BaseLinkProps<C extends React.ElementType = 'a'> = BoxProps<C> & {
@@ -10,18 +15,10 @@ type BaseLinkProps<C extends React.ElementType = 'a'> = BoxProps<C> & {
   isExternal?: boolean;
 };
 
-const BaseLinkComp = styled<BoxComponent<'a'>>(Box)`
-  text-decoration: none;
-
-  &:visited {
-    color: inherit;
-  }
-`;
-
 const BaseLink = forwardRef<HTMLAnchorElement, BaseLinkProps>(
   ({ href, disabled = false, isExternal = false, ...props }, ref) => {
     return (
-      <BaseLinkComp
+      <Box
         tag="a"
         ref={ref}
         target={isExternal ? '_blank' : undefined}
@@ -31,6 +28,7 @@ const BaseLink = forwardRef<HTMLAnchorElement, BaseLinkProps>(
         aria-disabled={disabled}
         pointerEvents={disabled ? 'none' : undefined}
         cursor={disabled ? undefined : 'pointer'}
+        data-strapi-base-link=""
         {...props}
       />
     );

@@ -1,12 +1,21 @@
+/**
+ * Switch — drop-in port off styled-components.
+ *
+ * Still Radix Switch + composed event handlers + controllable state.
+ * Visual rules (size, on/off/disabled background colors, thumb position +
+ * transition, label color states) moved to `componentPolish.css` keyed on
+ * `[data-strapi-switch-root]` and `[data-strapi-switch-thumb]`. Radix's
+ * `data-state="checked"` and `data-disabled` attributes are preserved as
+ * selectors for the state-driven CSS.
+ */
 import * as React from 'react';
 
 import * as RadixSwitch from '@radix-ui/react-switch';
 import { composeEventHandlers } from '@strapi/ui-primitives';
-import { styled } from 'styled-components';
 
 import { useControllableState } from '../../hooks/useControllableState';
 import { Flex } from '../../primitives/Flex';
-import { Typography, TypographyComponent } from '../../primitives/Typography';
+import { Typography } from '../../primitives/Typography';
 
 interface SwitchProps extends Omit<RadixSwitch.SwitchProps, 'children'> {
   onLabel?: string;
@@ -39,73 +48,30 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
 
     return (
       <Flex gap={3}>
-        <SwitchRoot
+        <RadixSwitch.Root
           ref={forwardedRef}
           onCheckedChange={composeEventHandlers(onCheckedChangeProp, handleCheckChange)}
           checked={internalChecked}
           disabled={disabled}
+          data-strapi-switch-root=""
           {...restProps}
         >
-          <SwitchThumb />
-        </SwitchRoot>
+          <RadixSwitch.Thumb data-strapi-switch-thumb="" />
+        </RadixSwitch.Root>
         {visibleLabels ? (
-          <LabelTypography aria-hidden data-disabled={disabled} data-state={internalChecked ? 'checked' : 'unchecked'}>
+          <Typography
+            aria-hidden
+            data-strapi-switch-label=""
+            data-disabled={disabled}
+            data-state={internalChecked ? 'checked' : 'unchecked'}
+          >
             {internalChecked ? onLabel : offLabel}
-          </LabelTypography>
+          </Typography>
         ) : null}
       </Flex>
     );
   },
 );
-
-const SwitchRoot = styled(RadixSwitch.Root)`
-  width: 4rem;
-  height: 2.4rem;
-  border-radius: 1.2rem;
-  background-color: ${({ theme }) => theme.colors.danger500};
-
-  &[data-state='checked'] {
-    background-color: ${({ theme }) => theme.colors.success500};
-  }
-
-  &[data-disabled] {
-    background-color: ${({ theme }) => theme.colors.neutral300};
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition: ${(props) => props.theme.transitions.backgroundColor};
-  }
-`;
-
-const SwitchThumb = styled(RadixSwitch.Thumb)`
-  display: block;
-  height: 1.6rem;
-  width: 1.6rem;
-  border-radius: 50%;
-  background-color: ${({ theme }) => theme.colors.neutral0};
-  transform: translateX(4px);
-
-  &[data-state='checked'] {
-    transform: translateX(20px);
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition: transform ${(props) => props.theme.motion.timings['120']}
-      ${(props) => props.theme.motion.easings.authenticMotion};
-  }
-`;
-
-const LabelTypography = styled<TypographyComponent>(Typography)`
-  color: ${(props) => props.theme.colors.danger600};
-
-  &[data-state='checked'] {
-    color: ${(props) => props.theme.colors.success600};
-  }
-
-  &[data-disabled='true'] {
-    color: ${({ theme }) => theme.colors.neutral500};
-  }
-`;
 
 export { Switch };
 export type { SwitchProps };

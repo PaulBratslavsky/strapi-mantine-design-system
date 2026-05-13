@@ -1,35 +1,53 @@
+/**
+ * Pagination components — drop-in port off styled-components.
+ *
+ * Three styled-components wrappers (LinkWrapper, ActionLinkWrapper,
+ * PageLinkWrapper) and the shared `focus` mixin from styles/buttons.ts
+ * replaced by data-attribute hooks + CSS rules in `componentPolish.css`:
+ *
+ *   [data-strapi-pagination-link]            — common padding + radius
+ *   [data-strapi-pagination-link][data-active] — active page (filterShadow)
+ *   [data-strapi-pagination-action-link]      — chevron icons + colors
+ *   [data-strapi-pagination-page-link]        — page-number active state
+ *
+ * focus ring (legacy `focus` mixin) replicated as a generic
+ * `[data-strapi-pagination-link]:focus-visible::after` rule.
+ */
 import * as React from 'react';
 
 import { ChevronLeft, ChevronRight } from '@strapi/icons';
-import { styled } from 'styled-components';
 
 import { Box, BoxProps } from '../../primitives/Box';
 import { Typography } from '../../primitives/Typography';
-import { focus } from '../../styles/buttons';
 import { PolymorphicRef } from '../../types';
 import { forwardRef } from '../../utilities/forwardRef';
 import { VisuallyHidden } from '../../utilities/VisuallyHidden';
-import { BaseLink, BaseLinkComponent, BaseLinkProps } from '../BaseLink';
+import { BaseLink, BaseLinkProps } from '../BaseLink';
 
 import { usePagination } from './PaginationContext';
 
-/* -------------------------------------------------------------------------------------------------
- * Next/Prev/Links
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Next / Prev                                                                */
+/* -------------------------------------------------------------------------- */
 
 type PaginationLinkProps<C extends React.ElementType = 'a'> = BaseLinkProps<C>;
 
 const PreviousLink = forwardRef(
   <C extends React.ElementType = 'a'>({ children, ...props }: PaginationLinkProps<C>, ref: PolymorphicRef<C>) => {
     const { activePage } = usePagination();
-
     const disabled = activePage === 1;
-
     return (
-      <ActionLinkWrapper ref={ref} aria-disabled={disabled} tabIndex={disabled ? -1 : undefined} {...props}>
+      <BaseLink
+        ref={ref}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : undefined}
+        data-strapi-pagination-link=""
+        data-strapi-pagination-action-link=""
+        {...props}
+      >
         <VisuallyHidden>{children}</VisuallyHidden>
         <ChevronLeft aria-hidden />
-      </ActionLinkWrapper>
+      </BaseLink>
     );
   },
 );
@@ -39,55 +57,28 @@ type PreviousLinkComponent<C extends React.ElementType = 'a'> = (props: Paginati
 const NextLink = forwardRef(
   <C extends React.ElementType = 'a'>({ children, ...props }: PaginationLinkProps<C>, ref: PolymorphicRef<C>) => {
     const { activePage, pageCount } = usePagination();
-
     const disabled = activePage === pageCount;
-
     return (
-      <ActionLinkWrapper ref={ref} aria-disabled={disabled} tabIndex={disabled ? -1 : undefined} {...props}>
+      <BaseLink
+        ref={ref}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : undefined}
+        data-strapi-pagination-link=""
+        data-strapi-pagination-action-link=""
+        {...props}
+      >
         <VisuallyHidden>{children}</VisuallyHidden>
         <ChevronRight aria-hidden />
-      </ActionLinkWrapper>
+      </BaseLink>
     );
   },
 );
 
 type NextLinkComponent<C extends React.ElementType = 'a'> = (props: PaginationLinkProps<C>) => React.ReactNode;
 
-const LinkWrapper = styled<BaseLinkComponent>(BaseLink)<{ $active?: boolean }>`
-  padding: ${({ theme }) => theme.spaces[3]};
-  border-radius: ${({ theme }) => theme.borderRadius};
-  box-shadow: ${({ $active, theme }) => ($active ? theme.shadows.filterShadow : undefined)};
-  text-decoration: none;
-  display: flex;
-
-  ${focus}
-`;
-
-const ActionLinkWrapper = styled(LinkWrapper)`
-  font-size: 1.1rem;
-
-  svg path {
-    fill: ${(p) => (p['aria-disabled'] ? p.theme.colors.neutral300 : p.theme.colors.neutral600)};
-  }
-
-  &:focus,
-  &:hover {
-    svg path {
-      fill: ${(p) => (p['aria-disabled'] ? p.theme.colors.neutral300 : p.theme.colors.neutral700)};
-    }
-  }
-
-  ${(p) =>
-    p['aria-disabled']
-      ? `
-  pointer-events: none;
-    `
-      : undefined}
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * PageLink
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* PageLink                                                                   */
+/* -------------------------------------------------------------------------- */
 
 type PaginationPageLinkProps<C extends React.ElementType = 'a'> = PaginationLinkProps<C> & {
   number: number;
@@ -99,34 +90,31 @@ const PageLink = forwardRef(
     ref: PolymorphicRef<C>,
   ) => {
     const { activePage } = usePagination();
-
     const isActive = activePage === number;
 
     return (
-      <PageLinkWrapper ref={ref} {...props} aria-current={isActive} $active={isActive}>
+      <BaseLink
+        ref={ref}
+        aria-current={isActive}
+        data-strapi-pagination-link=""
+        data-strapi-pagination-page-link=""
+        data-active={isActive ? '' : undefined}
+        {...props}
+      >
         <VisuallyHidden>{children}</VisuallyHidden>
         <Typography aria-hidden fontWeight={isActive ? 'bold' : undefined} lineHeight="revert" variant="pi">
           {number}
         </Typography>
-      </PageLinkWrapper>
+      </BaseLink>
     );
   },
 );
 
 type PageLinkComponent<C extends React.ElementType = 'a'> = (props: PaginationPageLinkProps<C>) => React.ReactNode;
 
-const PageLinkWrapper = styled(LinkWrapper)<{ $active?: boolean }>`
-  color: ${({ theme, $active }) => ($active ? theme.colors.primary700 : theme.colors.neutral800)};
-  background: ${({ theme, $active }) => ($active ? theme.colors.neutral0 : undefined)};
-
-  &:hover {
-    box-shadow: ${({ theme }) => theme.shadows.filterShadow};
-  }
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * Dots
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Dots                                                                       */
+/* -------------------------------------------------------------------------- */
 
 interface DotsProps extends BoxProps {}
 

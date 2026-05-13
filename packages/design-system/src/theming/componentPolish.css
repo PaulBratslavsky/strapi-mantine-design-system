@@ -517,4 +517,197 @@
       animation: strapi-radio-pop-in 0.2s ease-out;
     }
   }
+
+  /* === EmptyStateLayout — large icon sizing =============================== */
+  [data-strapi-empty-state-icon] svg {
+    height: 8.8rem;
+  }
+
+  /* === Breadcrumbs — first crumb left-aligned with page edge ============= *
+   * CrumbLink has horizontal padding for hover targeting; offset the first
+   * list item by that amount so the breadcrumb text sits flush with the
+   * page edge.
+   */
+  [data-strapi-breadcrumbs-list] > *:first-child {
+    margin-left: calc(-1 * var(--strapi-space-2));
+  }
+
+  /* === CrumbLink — neutral colors + hover/focus state ==================== */
+  [data-strapi-crumb-link] {
+    border-radius: var(--strapi-radius);
+    color: var(--strapi-color-neutral600);
+    font-size: var(--strapi-font-size-1);
+    line-height: var(--strapi-line-height-4);
+    padding: var(--strapi-space-1) var(--strapi-space-2);
+    text-decoration: none;
+  }
+  [data-strapi-crumb-link]:hover,
+  [data-strapi-crumb-link]:focus {
+    background-color: var(--strapi-color-neutral200);
+    color: var(--strapi-color-neutral700);
+  }
+
+  /* === CrumbSimpleMenu — breadcrumb-specific padding + hover ============ */
+  [data-strapi-crumb-menu] {
+    padding: var(--strapi-space-1) var(--strapi-space-2);
+    height: unset;
+  }
+  [data-strapi-crumb-menu]:hover,
+  [data-strapi-crumb-menu]:focus {
+    background-color: var(--strapi-color-neutral200);
+  }
+
+  /* === TextButton — transparent, primary text, focus ring =============== *
+   * Replicates the legacy `focus` mixin from `styles/buttons.ts` via a
+   * generic `:focus-visible::after` overlay on the data hook.
+   */
+  [data-strapi-text-button] {
+    border: none;
+    background-color: transparent;
+    color: var(--strapi-color-primary600);
+    cursor: pointer;
+    position: relative;
+    outline: none;
+  }
+  [data-strapi-text-button][aria-disabled='true'] {
+    pointer-events: none;
+    color: var(--strapi-color-neutral600);
+  }
+  [data-strapi-text-button]::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    left: -4px;
+    right: -4px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  [data-strapi-text-button]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-text-button]:focus-visible::after {
+    top: -5px;
+    bottom: -5px;
+    left: -5px;
+    right: -5px;
+    border-color: var(--strapi-color-primary600);
+  }
+  /* Loader spinner inside TextButton — reuses the strapi-loader-rotation
+     keyframes defined for [data-strapi-loader] above. */
+  [data-strapi-text-button-loader] {
+    display: flex;
+    animation: strapi-loader-rotation 2s infinite linear;
+    will-change: transform;
+  }
+
+  /* === IconButton — per-size square padding + group radii ================ *
+   * Sized to keep the icon centered with a comfortable hit target. The
+   * `(min-width: 48em)` breakpoint shrinks the padding for desktop dense
+   * layouts — matches the legacy theme.breakpoints.medium definition.
+   */
+  [data-strapi-icon-button][data-strapi-icon-button-size='XS'] {
+    padding: 0.7rem;
+  }
+  [data-strapi-icon-button][data-strapi-icon-button-size='S'] {
+    padding: 1.1rem;
+  }
+  [data-strapi-icon-button][data-strapi-icon-button-size='M'] {
+    padding: 1.1rem;
+  }
+  [data-strapi-icon-button][data-strapi-icon-button-size='L'] {
+    padding: 1.5rem;
+  }
+  @media (min-width: 48em) {
+    [data-strapi-icon-button][data-strapi-icon-button-size='XS'] {
+      padding: 0.2rem;
+    }
+    [data-strapi-icon-button][data-strapi-icon-button-size='S'] {
+      padding: 0.7rem;
+    }
+    [data-strapi-icon-button][data-strapi-icon-button-size='M'] {
+      padding: 0.9rem;
+    }
+    [data-strapi-icon-button][data-strapi-icon-button-size='L'] {
+      padding: 1.1rem;
+    }
+  }
+  /* Group: first item rounds the left edge, last item rounds the right edge,
+     middle items square. Adjacent items drop the left border to merge. */
+  [data-strapi-icon-button-group] [data-strapi-icon-button] {
+    border-radius: 0;
+  }
+  [data-strapi-icon-button-group] [data-strapi-icon-button]:first-child {
+    border-top-left-radius: var(--strapi-radius);
+    border-bottom-left-radius: var(--strapi-radius);
+  }
+  [data-strapi-icon-button-group] [data-strapi-icon-button]:last-child {
+    border-top-right-radius: var(--strapi-radius);
+    border-bottom-right-radius: var(--strapi-radius);
+  }
+  [data-strapi-icon-button-group] [data-strapi-icon-button] + [data-strapi-icon-button] {
+    border-left: none;
+  }
+
+  /* === Pagination — Prev/Next/Page links share common padding + radius == */
+  [data-strapi-pagination-link] {
+    padding: var(--strapi-space-3);
+    border-radius: var(--strapi-radius);
+    text-decoration: none;
+    display: flex;
+    position: relative;
+    outline: none;
+  }
+  /* focus mixin: matches legacy `styles/buttons.ts` `focus` */
+  [data-strapi-pagination-link]::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    left: -4px;
+    right: -4px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  [data-strapi-pagination-link]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-pagination-link]:focus-visible::after {
+    top: -5px;
+    bottom: -5px;
+    left: -5px;
+    right: -5px;
+    border-color: var(--strapi-color-primary600);
+  }
+  /* Action links (prev/next) — chevron coloring + disabled state */
+  [data-strapi-pagination-action-link] {
+    font-size: 1.1rem;
+  }
+  [data-strapi-pagination-action-link] svg path {
+    fill: var(--strapi-color-neutral600);
+  }
+  [data-strapi-pagination-action-link]:hover svg path,
+  [data-strapi-pagination-action-link]:focus svg path {
+    fill: var(--strapi-color-neutral700);
+  }
+  [data-strapi-pagination-action-link][aria-disabled='true'] {
+    pointer-events: none;
+  }
+  [data-strapi-pagination-action-link][aria-disabled='true'] svg path {
+    fill: var(--strapi-color-neutral300);
+  }
+  /* Page-number links — active state shadow + bg */
+  [data-strapi-pagination-page-link] {
+    color: var(--strapi-color-neutral800);
+  }
+  [data-strapi-pagination-page-link][data-active] {
+    color: var(--strapi-color-primary700);
+    background: var(--strapi-color-neutral0);
+    box-shadow: var(--strapi-shadow-filter);
+  }
+  [data-strapi-pagination-page-link]:hover {
+    box-shadow: var(--strapi-shadow-filter);
+  }
 }

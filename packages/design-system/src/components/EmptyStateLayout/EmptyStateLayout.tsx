@@ -1,8 +1,12 @@
+/**
+ * EmptyStateLayout — drop-in port off styled-components.
+ *
+ * Only styled rule was sizing the icon's `svg` to 8.8rem. Replaced with a
+ * `data-strapi-empty-state-icon` data hook + CSS rule in `componentPolish.css`.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, BoxComponent } from '../../primitives/Box';
+import { Box } from '../../primitives/Box';
 import { Flex, FlexProps } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
 
@@ -12,14 +16,8 @@ export interface EmptyStateLayoutProps extends Pick<FlexProps, 'hasRadius' | 'sh
   icon?: React.ReactNode;
 }
 
-const EmptyStateIconWrapper = styled<BoxComponent>(Box)`
-  svg {
-    height: 8.8rem;
-  }
-`;
-
 export const EmptyStateLayout = React.forwardRef<HTMLDivElement, EmptyStateLayoutProps>(
-  ({ icon, content, action, hasRadius = true, shadow = 'tableShadow' }: EmptyStateLayoutProps, forwardedRef) => {
+  ({ icon, content, action, hasRadius = true, shadow = 'tableShadow' }, forwardedRef) => {
     return (
       <Flex
         ref={forwardedRef}
@@ -31,9 +29,9 @@ export const EmptyStateLayout = React.forwardRef<HTMLDivElement, EmptyStateLayou
         shadow={shadow}
       >
         {icon ? (
-          <EmptyStateIconWrapper paddingBottom={6} aria-hidden>
+          <Box paddingBottom={6} aria-hidden data-strapi-empty-state-icon="">
             {icon}
-          </EmptyStateIconWrapper>
+          </Box>
         ) : null}
 
         <Box paddingBottom={4}>

@@ -1,11 +1,21 @@
+/**
+ * TextButton — drop-in port off styled-components.
+ *
+ * Background-less button with optional start/end icons + loading spinner.
+ * Visual rules (transparent bg, primary text color, disabled state) +
+ * the shared focus-ring mixin moved to `componentPolish.css` keyed on
+ * `[data-strapi-text-button]`.
+ *
+ * Loading spinner is now a CSS animation on `[data-strapi-text-button-
+ * loader]` instead of styled-components keyframes — same look, no styled-
+ * components import.
+ */
 import * as React from 'react';
 
 import { Loader } from '@strapi/icons';
-import { styled, keyframes } from 'styled-components';
 
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
+import { Flex, FlexProps } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
-import { focus } from '../../styles/buttons';
 import { PolymorphicComponentPropsWithRef, PolymorphicRef } from '../../types';
 import { forwardRef } from '../../utilities/forwardRef';
 
@@ -24,20 +34,27 @@ const TextButton = forwardRef(
   ) => {
     const isDisabled = disabled || loading;
 
+    // `disabled` is a native button attribute that Flex's typed entry
+    // doesn't enumerate (Flex extends BoxProps which is div-shaped). At
+    // runtime it's forwarded to the rendered button element via Box's
+    // spread. Cast to keep types loose at this seam.
+    const flexProps = {
+      ref,
+      disabled: isDisabled,
+      'aria-disabled': isDisabled,
+      tag: 'button' as const,
+      type,
+      gap: 2,
+      'data-strapi-text-button': '',
+      ...props,
+    } as React.ComponentProps<typeof Flex>;
+
     return (
-      <TextButtonWrapper
-        ref={ref}
-        disabled={isDisabled}
-        aria-disabled={isDisabled}
-        tag="button"
-        type={type}
-        gap={2}
-        {...props}
-      >
+      <Flex {...flexProps}>
         {loading ? (
-          <LoadingWrapper aria-hidden>
+          <span aria-hidden data-strapi-text-button-loader="">
             <Loader />
-          </LoadingWrapper>
+          </span>
         ) : (
           startIcon
         )}
@@ -45,7 +62,7 @@ const TextButton = forwardRef(
         <Typography variant="pi">{children}</Typography>
 
         {endIcon}
-      </TextButtonWrapper>
+      </Flex>
     );
   },
 ) as TextButtonComponent;
@@ -53,34 +70,6 @@ const TextButton = forwardRef(
 type TextButtonComponent<C extends React.ElementType = 'button'> = <T extends React.ElementType = C>(
   props: PolymorphicComponentPropsWithRef<T, TextButtonProps<T>>,
 ) => JSX.Element;
-const rotation = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(359deg);
-  }
-`;
-
-const LoadingWrapper = styled.span`
-  display: flex;
-  animation: ${rotation} 2s infinite linear;
-  will-change: transform;
-`;
-
-const TextButtonWrapper = styled<FlexComponent<'button'>>(Flex)`
-  border: none;
-  background-color: transparent;
-  color: ${(props) => props.theme.colors.primary600};
-  cursor: pointer;
-
-  &[aria-disabled='true'] {
-    pointer-events: none;
-    color: ${(props) => props.theme.colors.neutral600};
-  }
-
-  ${focus}
-`;
 
 export { TextButton };
 export type { TextButtonProps };

@@ -260,6 +260,14 @@ const getOptionStyle = ({ theme, $variant }: { theme: DefaultTheme; $variant: It
 `;
 
 const OptionButton = styled<FlexComponent<'button' | 'a'>>(Flex)<{ $variant: ItemVariant }>`
+  /* Force flex display so a consumer-passed display prop on Menu.Item
+     (e.g. strapi-experimental DocumentActions passes display="block")
+     does not defeat the icon+label horizontal layout. Without this, the
+     startIcon span ends up stacked above the Typography label.
+     Pre-existing legacy quirk surfaced during the migration audit. */
+  &&& {
+    display: flex;
+  }
   ${({ theme, $variant }) => getOptionStyle({ theme, $variant })}
 `;
 

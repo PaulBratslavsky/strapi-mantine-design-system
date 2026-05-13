@@ -54,10 +54,36 @@ export function resolve(
   return resolver(value);
 }
 
+/**
+ * Spacing resolver — turns Strapi values into something Mantine accepts.
+ *
+ * - Numeric (`padding={2}`)            → `var(--strapi-space-2)`
+ * - CSS var or %                       → passthrough (Mantine leaves these alone)
+ * - Raw px/rem (`width="1384px"`)      → wrapped in `calc(...)` to bypass
+ *   Mantine's rem-conversion-and-scale step. Mantine's spacing resolver
+ *   converts bare px/rem strings to `calc(<value-as-rem> * var(--mantine-scale))`
+ *   which silently shrinks every dimension when the app sets a scale != 1.
+ *   Wrapping in `calc()` upfront makes Mantine pass the value through
+ *   unchanged.
+ *
+ * Detected by HeaderLayout's sticky variant which set `width="${measured}px"`
+ * and got back ~72% of the expected width because of Strapi's
+ * `--mantine-scale: 1.15` (set in `app-theme.css` to compensate for Strapi's
+ * legacy `font-size: 62.5%` for inputs/buttons — a fix that unintentionally
+ * affected every Mantine spacing/size value too).
+ */
 export const resolveSpacing: Resolver = (v) => {
   if (v == null) return undefined;
   if (typeof v === 'number') return `var(--strapi-space-${v})`;
-  return String(v);
+  const s = String(v).trim();
+  // Already a calc()/var()/% value, or already-wrapped — pass through.
+  if (s.startsWith('calc(') || s.startsWith('var(') || s.endsWith('%')) return s;
+  // Raw numeric+unit (px/rem/em/vh/vw/dvh/dvw/etc.) — wrap so Mantine doesn't
+  // rem-scale it. Browser computes the value just the same.
+  if (/^-?[\d.]+(px|rem|em|vh|vw|vmin|vmax|dvh|dvw|dvi|dvb|svh|svw|lvh|lvw|ch|ex|fr)$/.test(s)) {
+    return `calc(${s})`;
+  }
+  return s;
 };
 
 export const resolveColor: Resolver = (v) => {

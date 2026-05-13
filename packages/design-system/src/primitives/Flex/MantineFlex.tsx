@@ -108,13 +108,21 @@ const MantineFlex = React.forwardRef<HTMLElement, MantineFlexComponentProps>((pr
     gap: gap !== undefined ? translateGap(gap) : undefined,
   };
 
-  // Mantine `<Flex>` applies `display: flex` via an external CSS class
-  // (`@mantine/core/styles.css`). Emit it as inline style too so:
-  //   1. jsdom-based tests can verify display behavior (jsdom doesn't resolve
-  //      external stylesheets).
-  //   2. `inline` overrides cleanly to `inline-flex` without specificity
-  //      battles against Mantine's class.
-  inlineStyle.display = inline ? 'inline-flex' : 'flex';
+  // CRITICAL: do NOT default `display: flex` to inline style.
+  // Mantine's `<Flex>` already sets `display: flex` via its `mantine-Flex-root`
+  // class (`@mantine/core/styles.css`). Setting it inline as well beats every
+  // styled(Flex) wrapper that overrides display via class (e.g.
+  // `SideNavContainer = styled(Flex)\`display: none / display: block\`` in
+  // `Layouts/Layout.tsx`), turning what should be a block/none container into
+  // a flex container — which then cascades through `[data-strapi-flex] {
+  // align-items: center }` and visually centers the child where it shouldn't.
+  //
+  // Only emit `inline-flex` inline when the consumer explicitly opts in via
+  // the `inline` prop — that case genuinely needs to override Mantine's class
+  // default and inline is the right cascade level for that.
+  if (inline) {
+    inlineStyle.display = 'inline-flex';
+  }
 
   return (
     <MantineFlexPermissive

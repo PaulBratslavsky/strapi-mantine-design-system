@@ -20,29 +20,29 @@ import { Flex } from '../../primitives/Flex';
 import { DSProvider } from '../../resolver';
 
 describe('Flex migration', () => {
-  it('renders display:flex by default; align-items default comes from CSS, not inline style', () => {
+  it('does not emit display/direction/align defaults to inline style', () => {
+    // Defaults must come from Mantine's `mantine-Flex-root` class +
+    // `[data-strapi-flex]` CSS rule — NOT inline style. Otherwise consumer
+    // styled() wrappers can't override (inline beats class). See
+    // MantineFlex.tsx header for the SideNavContainer / Column / MenuDetails
+    // breakage that prompted this.
     const { container } = render(<Flex>x</Flex>);
     const root = getRoot(container);
-    // display is inline (also covered by Mantine's class) for jsdom + override
-    // ergonomics — see MantineFlex.tsx file header.
-    expect(root).toHaveStyle('display: flex');
-    // alignItems and direction defaults are NOT in inline style — they live
-    // in `theming/componentPolish.css` as `[data-strapi-flex]` rules so
-    // styled(Flex) wrappers (Column, MenuDetails, etc.) can override via
-    // their own class-level rules. Verify the data hook is present.
+    const style = root.getAttribute('style') || '';
     expect(root).toHaveAttribute('data-strapi-flex');
-    expect(root.getAttribute('style')).not.toContain('align-items');
-    expect(root.getAttribute('style')).not.toContain('flex-direction');
+    expect(style).not.toContain('display:');
+    expect(style).not.toContain('align-items');
+    expect(style).not.toContain('flex-direction');
+  });
+
+  it('inline=true emits display:inline-flex inline (explicit override case)', () => {
+    const { container } = render(<Flex inline>x</Flex>);
+    expect(getRoot(container).getAttribute('style') || '').toContain('display: inline-flex');
   });
 
   it('direction="column" emits flex-direction: column', () => {
     const { container } = render(<Flex direction="column">x</Flex>);
     expect(getRoot(container)).toHaveStyle('flex-direction: column');
-  });
-
-  it('inline swaps to inline-flex', () => {
-    const { container } = render(<Flex inline>x</Flex>);
-    expect(getRoot(container)).toHaveStyle('display: inline-flex');
   });
 
   it('gap={N} resolves to --strapi-space-N', () => {

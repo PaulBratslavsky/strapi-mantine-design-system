@@ -1,11 +1,15 @@
+import { MantineProvider } from '@mantine/core';
 import { Provider as TooltipProvider, TooltipProviderProps } from '@radix-ui/react-tooltip';
 import { DefaultTheme, ThemeProvider } from 'styled-components';
 
 import { LiveRegions } from '../components/LiveRegions';
 import { createContext } from '../helpers/context';
 import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect';
-import { GlobalStyle } from '../styles/global';
+import { DSProvider } from '../resolver';
 import { lightTheme } from '../themes';
+import { mantineTheme } from '../theming';
+
+import type { DSOverrides } from '../resolver';
 
 const DEFAULT_LOCALE = 'en-EN';
 
@@ -33,6 +37,15 @@ interface DesignSystemProviderProps extends Partial<DesignSystemContextValue> {
   children?: React.ReactNode;
   theme?: DefaultTheme;
   tooltipConfig?: Omit<TooltipProviderProps, 'children'>;
+  /**
+   * WordPress-style component overrides. Apps and plugins can swap any
+   * registered DS component for a custom implementation in this subtree.
+   *
+   * See notes/ds-migration/principles.md (override surface 6). Reach for
+   * this only when Mantine's native mechanisms (theme.components, styles
+   * prop, polymorphic component) cannot express what you want.
+   */
+  overrides?: DSOverrides;
 }
 
 const DesignSystemProvider = ({
@@ -40,6 +53,7 @@ const DesignSystemProvider = ({
   locale = getDefaultLocale(),
   theme = lightTheme,
   tooltipConfig,
+  overrides,
 }: DesignSystemProviderProps) => {
   useIsomorphicLayoutEffect(() => {
     /**
@@ -68,11 +82,14 @@ const DesignSystemProvider = ({
 
   return (
     <Provider locale={locale}>
-      <ThemeProvider theme={theme}>
-        <TooltipProvider {...tooltipConfig}>{children}</TooltipProvider>
-        <LiveRegions />
-        <GlobalStyle />
-      </ThemeProvider>
+      <MantineProvider theme={mantineTheme} withCssVariables defaultColorScheme="light">
+        <DSProvider components={overrides}>
+          <ThemeProvider theme={theme}>
+            <TooltipProvider {...tooltipConfig}>{children}</TooltipProvider>
+            <LiveRegions />
+          </ThemeProvider>
+        </DSProvider>
+      </MantineProvider>
     </Provider>
   );
 };

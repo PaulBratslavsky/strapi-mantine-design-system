@@ -1,0 +1,172 @@
+/**
+ * Strapi design-system tokens as CSS custom properties.
+ *
+ * Source of truth: src/themes/lightTheme/* and src/themes/darkTheme/*.
+ * These values MUST stay in lockstep with the styled-components theme objects
+ * until Phase 8 removes the styled-components stack. Until then we ship both;
+ * both read the same numbers, just in different formats.
+ *
+ * Naming: --strapi-<category>-<key>. Category and key match the existing TS
+ * property names (color.primary600 → --strapi-color-primary600) so the rename
+ * to vars is mechanical, never semantic.
+ *
+ * Per the migration principles doc: token names are append-only. Once a name
+ * ships, it stays — you can change the value but never delete the variable.
+ */
+@layer strapi-tokens {
+  :root {
+    /* Colors — light theme */
+    --strapi-color-alternative100: #f6ecfc;
+    --strapi-color-alternative200: #e0c1f4;
+    --strapi-color-alternative500: #ac73e6;
+    --strapi-color-alternative600: #9736e8;
+    --strapi-color-alternative700: #8312d1;
+    --strapi-color-button-neutral0: #ffffff;
+    --strapi-color-button-primary500: #7b79ff;
+    --strapi-color-button-primary600: #4945ff;
+    --strapi-color-danger100: #fcecea;
+    --strapi-color-danger200: #f5c0b8;
+    --strapi-color-danger500: #ee5e52;
+    --strapi-color-danger600: #d02b20;
+    --strapi-color-danger700: #b72b1a;
+    --strapi-color-neutral0: #ffffff;
+    --strapi-color-neutral100: #f6f6f9;
+    --strapi-color-neutral150: #eaeaef;
+    --strapi-color-neutral200: #dcdce4;
+    --strapi-color-neutral300: #c0c0cf;
+    --strapi-color-neutral400: #a5a5ba;
+    --strapi-color-neutral500: #8e8ea9;
+    --strapi-color-neutral600: #666687;
+    --strapi-color-neutral700: #4a4a6a;
+    --strapi-color-neutral800: #32324d;
+    --strapi-color-neutral900: #212134;
+    --strapi-color-neutral1000: #181826;
+    --strapi-color-primary100: #f0f0ff;
+    --strapi-color-primary200: #d9d8ff;
+    --strapi-color-primary500: #7b79ff;
+    --strapi-color-primary600: #4945ff;
+    --strapi-color-primary700: #271fe0;
+    --strapi-color-secondary100: #eaf5ff;
+    --strapi-color-secondary200: #b8e1ff;
+    --strapi-color-secondary500: #66b7f1;
+    --strapi-color-secondary600: #0c75af;
+    --strapi-color-secondary700: #006096;
+    --strapi-color-success100: #eafbe7;
+    --strapi-color-success200: #c6f0c2;
+    --strapi-color-success500: #5cb176;
+    --strapi-color-success600: #328048;
+    --strapi-color-success700: #2f6846;
+    --strapi-color-warning100: #fdf4dc;
+    --strapi-color-warning200: #fae7b9;
+    --strapi-color-warning500: #f29d41;
+    --strapi-color-warning600: #d9822f;
+    --strapi-color-warning700: #be5d01;
+
+    /* Shadows — light theme */
+    --strapi-shadow-filter: 0px 1px 4px rgba(33, 33, 52, 0.1);
+    --strapi-shadow-focus: inset 2px 0px 0px rgb(39, 31, 224), inset 0px 2px 0px rgb(39, 31, 224),
+      inset -2px 0px 0px rgb(39, 31, 224), inset 0px -2px 0px rgb(39, 31, 224);
+    --strapi-shadow-focus-glow: 0px 0px 6px rgba(76, 191, 255, 0.75);
+    --strapi-shadow-popup: 0px 2px 15px rgba(33, 33, 52, 0.1);
+    --strapi-shadow-table: 0px 1px 4px rgba(33, 33, 52, 0.1);
+
+    /* Spaces — index-based, matches theme.spaces[n] */
+    --strapi-space-0: 0px;
+    --strapi-space-1: 4px;
+    --strapi-space-2: 8px;
+    --strapi-space-3: 12px;
+    --strapi-space-4: 16px;
+    --strapi-space-5: 20px;
+    --strapi-space-6: 24px;
+    --strapi-space-7: 32px;
+    --strapi-space-8: 40px;
+    --strapi-space-9: 48px;
+    --strapi-space-10: 56px;
+    --strapi-space-11: 64px;
+
+    /* Radius */
+    --strapi-radius: 4px;
+
+    /* Font sizes — index-based, matches theme.fontSizes[n] */
+    --strapi-font-size-0: 1.1rem;
+    --strapi-font-size-1: 1.2rem;
+    --strapi-font-size-2: 1.4rem;
+    --strapi-font-size-3: 1.6rem;
+    --strapi-font-size-4: 1.8rem;
+    --strapi-font-size-5: 2rem;
+    --strapi-font-size-6: 2.8rem;
+    --strapi-font-size-7: 3.2rem;
+
+    /* Line heights — index-based */
+    --strapi-line-height-0: 1.14;
+    --strapi-line-height-1: 1.22;
+    --strapi-line-height-2: 1.25;
+    --strapi-line-height-3: 1.33;
+    --strapi-line-height-4: 1.43;
+    --strapi-line-height-5: 1.45;
+    --strapi-line-height-6: 1.5;
+
+    /* Font weights */
+    --strapi-font-weight-regular: 400;
+    --strapi-font-weight-semi-bold: 500;
+    --strapi-font-weight-bold: 600;
+
+    /* Z-indices */
+    --strapi-z-navigation: 100;
+    --strapi-z-overlay: 300;
+    --strapi-z-modal: 310;
+    --strapi-z-dialog: 320;
+    --strapi-z-popover: 500;
+    --strapi-z-notification: 700;
+    --strapi-z-tooltip: 1000;
+  }
+
+  /* Dark theme overrides — same variable names, different values. */
+  [data-theme='dark'] {
+    --strapi-color-alternative100: #181826;
+    --strapi-color-alternative200: #4a4a6a;
+    --strapi-color-alternative500: #ac73e6;
+    --strapi-color-alternative600: #ac73e6;
+    --strapi-color-alternative700: #e0c1f4;
+    --strapi-color-button-neutral0: #ffffff;
+    --strapi-color-button-primary500: #7b79ff;
+    --strapi-color-button-primary600: #4945ff;
+    --strapi-color-danger100: #181826;
+    --strapi-color-danger200: #4a4a6a;
+    --strapi-color-danger500: #ee5e52;
+    --strapi-color-danger600: #ee5e52;
+    --strapi-color-danger700: #ee5e52;
+    --strapi-color-neutral0: #212134;
+    --strapi-color-neutral100: #181826;
+    --strapi-color-neutral150: #32324d;
+    --strapi-color-neutral200: #4a4a6a;
+    --strapi-color-neutral300: #666687;
+    --strapi-color-neutral400: #a5a5ba;
+    --strapi-color-neutral500: #c0c0cf;
+    --strapi-color-neutral600: #a5a5ba;
+    --strapi-color-neutral700: #eaeaef;
+    --strapi-color-neutral800: #ffffff;
+    --strapi-color-neutral900: #ffffff;
+    --strapi-color-neutral1000: #ffffff;
+    --strapi-color-primary100: #181826;
+    --strapi-color-primary200: #4a4a6a;
+    --strapi-color-primary500: #4945ff;
+    --strapi-color-primary600: #7b79ff;
+    --strapi-color-primary700: #7b79ff;
+    --strapi-color-secondary100: #181826;
+    --strapi-color-secondary200: #4a4a6a;
+    --strapi-color-secondary500: #66b7f1;
+    --strapi-color-secondary600: #66b7f1;
+    --strapi-color-secondary700: #b8e1ff;
+    --strapi-color-success100: #181826;
+    --strapi-color-success200: #4a4a6a;
+    --strapi-color-success500: #5cb176;
+    --strapi-color-success600: #5cb176;
+    --strapi-color-success700: #c6f0c2;
+    --strapi-color-warning100: #181826;
+    --strapi-color-warning200: #4a4a6a;
+    --strapi-color-warning500: #f29d41;
+    --strapi-color-warning600: #f29d41;
+    --strapi-color-warning700: #fae7b9;
+  }
+}

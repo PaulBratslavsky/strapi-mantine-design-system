@@ -1,0 +1,46 @@
+/**
+ * componentPolish.css — Strapi-specific visual polish on top of Mantine.
+ *
+ * Architecture (mantine-v2 branch):
+ *
+ *   1. Mantine v7 ships components with their own CSS (CSS Modules + native
+ *      CSS variables). That's the substrate. We do NOT re-implement Mantine's
+ *      component styling here.
+ *
+ *   2. Strapi token defaults live in `tokens.css` (--strapi-color-*, --strapi-
+ *      space-*, etc.) and are mapped into Mantine's theme via `mantineTheme.ts`.
+ *      Most Mantine CSS variables (--mantine-color-*) resolve through that
+ *      mapping, so token changes flow through the substrate automatically.
+ *
+ *   3. This file holds ONLY the visual polish Mantine has no slot for:
+ *      brand-specific halos, app-level body color routing, custom layout
+ *      micro-rules that compose Mantine primitives.
+ *
+ *   4. Cascade layers (from `layers.css`):
+ *        @layer reset, mantine, strapi-tokens, strapi-components, app;
+ *      Anything below shadows everything above. Consumer apps own `@layer app`
+ *      for installation-specific overrides.
+ *
+ * What does NOT go here:
+ *   - Per-component CSS that re-implements Mantine's styling. If Mantine ships
+ *     it, configure Mantine via `classNames` / `styles` / theme overrides, not
+ *     here.
+ *   - Anything that fights Mantine's defaults. If Mantine ships a default that
+ *     doesn't match Strapi's, fix it at the theme level (mantineTheme.ts) so
+ *     every Mantine component picks up the change, not via spot CSS.
+ */
+@layer strapi-components {
+  /* === Body — flippable default text color =============================== *
+   *
+   * Without this, the browser falls back to its built-in default (black),
+   * which doesn't track Strapi tokens or dark mode. Any element that doesn't
+   * set its own color — including default-color text — inherits this value.
+   *
+   * Routing through --strapi-color-neutral800 means dark-mode themes and
+   * consumer themes get text-color flipping for free by overriding that one
+   * token. No component code needs to know.
+   * ====================================================================== */
+  body {
+    color: var(--strapi-color-neutral800);
+  }
+}

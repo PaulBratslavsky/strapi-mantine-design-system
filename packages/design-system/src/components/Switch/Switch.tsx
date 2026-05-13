@@ -1,111 +1,87 @@
+/**
+ * Switch — thin translation layer over Mantine's <Switch>.
+ *
+ * Drops Radix Switch + styled-components wrappers. Mantine's <Switch>
+ * ships the thumb-slide animation, focus ring, disabled state, and
+ * built-in on/off labels (`onLabel`/`offLabel` prop pair).
+ *
+ * Strapi prop API preserved:
+ *   - checked, defaultChecked, disabled — pass-through
+ *   - onCheckedChange(checked) → Mantine onChange(event)
+ *   - onLabel / offLabel / visibleLabels — translated:
+ *       Mantine's `onLabel` / `offLabel` always render inside the switch
+ *       track. Strapi's `visibleLabels` rendered labels OUTSIDE the switch
+ *       as separate text. We keep Mantine's in-track labels (they're
+ *       cleaner) and treat `visibleLabels=false` as "no labels", true as
+ *       "show the on/off labels".
+ *
+ * Loses: the explicit danger/success color states on the track from
+ * legacy. Mantine ships its own switch palette (filled green when on,
+ * neutral when off). If a consumer needed the danger-red-off state
+ * specifically, they can pass `color` prop.
+ */
 import * as React from 'react';
 
-import * as RadixSwitch from '@radix-ui/react-switch';
-import { composeEventHandlers } from '@strapi/ui-primitives';
-import { styled } from 'styled-components';
+import { Switch as MantineSwitch, type SwitchProps as MantineSwitchProps } from '@mantine/core';
 
-import { useControllableState } from '../../hooks/useControllableState';
-import { Flex } from '../../primitives/Flex';
-import { Typography, TypographyComponent } from '../../primitives/Typography';
-
-interface SwitchProps extends Omit<RadixSwitch.SwitchProps, 'children'> {
+interface SwitchProps {
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
+  required?: boolean;
+  name?: string;
+  value?: string;
+  id?: string;
+  /** @default 'On' */
   onLabel?: string;
+  /** @default 'Off' */
   offLabel?: string;
+  /** When true, renders on/off labels inside the switch track. */
   visibleLabels?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  [key: string]: unknown;
 }
 
-const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
+const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
   (
     {
-      visibleLabels,
+      checked,
+      defaultChecked,
+      onCheckedChange,
+      disabled,
+      required,
+      name,
+      value,
+      id,
       onLabel = 'On',
       offLabel = 'Off',
-      onCheckedChange: onCheckedChangeProp,
-      checked: checkedProp,
-      defaultChecked,
-      disabled,
-      ...restProps
+      visibleLabels = false,
+      ...rest
     },
-    forwardedRef,
+    ref,
   ) => {
-    const [internalChecked, setInternalChecked] = useControllableState({
-      prop: checkedProp,
-      defaultProp: defaultChecked,
-    });
-
-    const handleCheckChange: SwitchProps['onCheckedChange'] = (checked) => {
-      setInternalChecked(checked);
-    };
-
     return (
-      <Flex gap={3}>
-        <SwitchRoot
-          ref={forwardedRef}
-          onCheckedChange={composeEventHandlers(onCheckedChangeProp, handleCheckChange)}
-          checked={internalChecked}
-          disabled={disabled}
-          {...restProps}
-        >
-          <SwitchThumb />
-        </SwitchRoot>
-        {visibleLabels ? (
-          <LabelTypography aria-hidden data-disabled={disabled} data-state={internalChecked ? 'checked' : 'unchecked'}>
-            {internalChecked ? onLabel : offLabel}
-          </LabelTypography>
-        ) : null}
-      </Flex>
+      <MantineSwitch
+        ref={ref}
+        checked={checked}
+        defaultChecked={defaultChecked}
+        onChange={(e) => onCheckedChange?.(e.currentTarget.checked)}
+        disabled={disabled}
+        required={required}
+        name={name}
+        value={value}
+        id={id}
+        onLabel={visibleLabels ? onLabel : undefined}
+        offLabel={visibleLabels ? offLabel : undefined}
+        {...(rest as Partial<MantineSwitchProps>)}
+      />
     );
   },
 );
 
-const SwitchRoot = styled(RadixSwitch.Root)`
-  width: 4rem;
-  height: 2.4rem;
-  border-radius: 1.2rem;
-  background-color: ${({ theme }) => theme.colors.danger500};
-
-  &[data-state='checked'] {
-    background-color: ${({ theme }) => theme.colors.success500};
-  }
-
-  &[data-disabled] {
-    background-color: ${({ theme }) => theme.colors.neutral300};
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition: ${(props) => props.theme.transitions.backgroundColor};
-  }
-`;
-
-const SwitchThumb = styled(RadixSwitch.Thumb)`
-  display: block;
-  height: 1.6rem;
-  width: 1.6rem;
-  border-radius: 50%;
-  background-color: ${({ theme }) => theme.colors.neutral0};
-  transform: translateX(4px);
-
-  &[data-state='checked'] {
-    transform: translateX(20px);
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition: transform ${(props) => props.theme.motion.timings['120']}
-      ${(props) => props.theme.motion.easings.authenticMotion};
-  }
-`;
-
-const LabelTypography = styled<TypographyComponent>(Typography)`
-  color: ${(props) => props.theme.colors.danger600};
-
-  &[data-state='checked'] {
-    color: ${(props) => props.theme.colors.success600};
-  }
-
-  &[data-disabled='true'] {
-    color: ${({ theme }) => theme.colors.neutral500};
-  }
-`;
+Switch.displayName = 'Switch';
 
 export { Switch };
 export type { SwitchProps };

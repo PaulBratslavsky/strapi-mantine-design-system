@@ -1,9 +1,14 @@
+/**
+ * CardAction — drop-in port off styled-components.
+ *
+ * Positions a row of actions absolutely at top-right (`position="end"`) or
+ * top-left (`position="start"`) of the Card. Layout rules moved to
+ * `[data-strapi-card-action]` + `[data-strapi-card-action-position]`
+ * CSS in `componentPolish.css`.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
-import { PropsToTransientProps } from '../../types';
+import { Flex, FlexProps } from '../../primitives/Flex';
 
 type CardActionPosition = 'end' | 'start';
 
@@ -11,28 +16,20 @@ type CardActionProps = Omit<FlexProps<'div'>, 'direction' | 'gap' | 'position'> 
   position: CardActionPosition;
 };
 
-const CardActionImpl = React.forwardRef<HTMLDivElement, CardActionProps>(({ position, ...restProps }, forwardedRef) => {
-  return <CardAction ref={forwardedRef} $position={position} {...restProps} direction="row" gap={2} />;
-});
+const CardAction = React.forwardRef<HTMLDivElement, CardActionProps>(
+  ({ position, ...restProps }, forwardedRef) => {
+    return (
+      <Flex
+        ref={forwardedRef}
+        direction="row"
+        gap={2}
+        data-strapi-card-action=""
+        data-strapi-card-action-position={position}
+        {...restProps}
+      />
+    );
+  },
+);
 
-const CardAction = styled<FlexComponent>(Flex)<PropsToTransientProps<CardActionProps>>`
-  position: absolute;
-  top: ${({ theme }) => theme.spaces[3]};
-  right: ${({ $position, theme }) => {
-    if ($position === 'end') {
-      return theme.spaces[3];
-    }
-
-    return undefined;
-  }};
-  left: ${({ $position, theme }) => {
-    if ($position === 'start') {
-      return theme.spaces[3];
-    }
-
-    return undefined;
-  }};
-`;
-
-export { CardActionImpl as CardAction };
+export { CardAction };
 export type { CardActionProps, CardActionPosition };

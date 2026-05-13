@@ -129,4 +129,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* === Tooltip — Strapi visual tokens =================================== *
+   * Legacy emitted `background: neutral900`, `color: neutral0`,
+   * `padding-block/inline: spaces[2]`, `border-radius: theme.borderRadius`,
+   * `z-index: zIndices.tooltip (1000)`. Targets Mantine's `.mantine-Tooltip-
+   * tooltip` class so the styling applies to the Mantine floating panel
+   * regardless of which trigger element wraps it.
+   * ====================================================================== */
+  .mantine-Tooltip-tooltip {
+    background: var(--strapi-color-neutral900);
+    color: var(--strapi-color-neutral0);
+    padding: var(--strapi-space-2);
+    border-radius: var(--strapi-radius);
+    z-index: 1000;
+  }
 }

@@ -1,30 +1,13 @@
+/**
+ * Tr — drop-in port off styled-components.
+ *
+ * Border + per-cell padding + first-cell narrow padding + th height all
+ * moved to `[data-strapi-tr]` CSS rules in `componentPolish.css`.
+ */
 import * as React from 'react';
-
-import { styled } from 'styled-components';
 
 import { RawTr, RawTrProps } from '../RawTable/RawTr';
 
-const TrWrapper = styled(RawTr)`
-  border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
-
-  & td,
-  & th {
-    padding: ${({ theme }) => theme.spaces[4]};
-  }
-
-  & td:first-of-type,
-  & th:first-of-type {
-    padding: 0 ${({ theme }) => theme.spaces[1]};
-  }
-
-  // Resetting padding values and fixing a height
-  th {
-    padding-top: 0;
-    padding-bottom: 0;
-    height: 5.6rem;
-  }
-`;
-
 export const Tr = (props: RawTrProps) => {
-  return <TrWrapper {...props} />;
+  return <RawTr data-strapi-tr="" {...props} />;
 };

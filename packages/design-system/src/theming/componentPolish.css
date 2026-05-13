@@ -23,6 +23,21 @@
  * --------------------------------------------------------------------------
  */
 @layer strapi-components {
+  /* === Body — flippable default text color =============================== *
+   * Without this, the browser falls back to its built-in default (black),
+   * which doesn't track Strapi's tokens. Any element that doesn't set its
+   * own color — including most <Typography> instances which default to
+   * `currentcolor` — inherits this value.
+   *
+   * Routing through --strapi-color-neutral800 means dark-mode themes and
+   * consumer themes (e.g. cyberpunk) get text-color flipping for free by
+   * overriding that one token. No component code needs to know.
+   * ======================================================================
+   */
+  body {
+    color: var(--strapi-color-neutral800);
+  }
+
   /* === Button — Strapi defaults that ship for every consumer ============ *
    * Bold label text — preserved from the legacy Strapi Button which used
    * `fontWeight="bold"`. Every Strapi consumer expects buttons to have
@@ -229,9 +244,45 @@
     color: inherit;
   }
 
-  /* === SkipToContent — a11y skip link; off-screen until focused =========== */
+  /* === Link — semantic color tokens =====================================
+   * Defaults reference the primary scale (matches the legacy
+   * styled-components Link). Themes can override these alone to re-skin
+   * every Link in the app without rebranding the primary scale.
+   *
+   * Consumer-level `color` / `activeColor` props win because MantineLink
+   * writes them as inline custom properties on the element when set.
+   */
+  :root {
+    --strapi-link-color: var(--strapi-color-primary600);
+    --strapi-link-color-active: var(--strapi-color-primary700);
+    --strapi-link-color-disabled: var(--strapi-color-neutral600);
+  }
+  [data-strapi-link] {
+    color: var(--strapi-link-color);
+  }
+  [data-strapi-link]:hover,
+  [data-strapi-link]:active {
+    color: var(--strapi-link-color-active);
+  }
+  [data-strapi-link][data-disabled] {
+    color: var(--strapi-link-color-disabled);
+  }
+
+  /* === SkipToContent — a11y skip link; off-screen until focused ===========
+   *
+   * Surface tokens default to the brand scale so the appearance matches the
+   * legacy styled-components version. Re-theme via:
+   *   --strapi-skip-to-content-bg
+   *   --strapi-skip-to-content-color
+   */
+  :root {
+    --strapi-skip-to-content-bg: var(--strapi-color-primary600);
+    --strapi-skip-to-content-color: var(--strapi-color-neutral0);
+  }
   [data-strapi-skip-to-content] {
     text-decoration: none;
+    background-color: var(--strapi-skip-to-content-bg);
+    color: var(--strapi-skip-to-content-color);
   }
   [data-strapi-skip-to-content]:focus {
     left: var(--strapi-space-3);
@@ -1142,21 +1193,68 @@
       animation: strapi-menu-slide-up-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
+  /* ------------------------------------------------------------------- *
+   * SimpleMenu semantic tokens — text/icon/hover colors per variant
+   *
+   * Defaults preserve the legacy styled-components look. To re-skin
+   * menus (e.g. brand-themed danger items), override these alone — no
+   * need to rebrand the primary or danger scales.
+   *
+   * Color flows: option color = icon color (children inherit). The
+   * `[data-strapi-menu-option-text]` rule lets default text be darker
+   * than its icon while danger keeps text + icon in sync.
+   * ------------------------------------------------------------------- */
+  :root {
+    /* Icons (option element baseline color — icons inherit it) */
+    --strapi-menu-option-icon-color: var(--strapi-color-neutral500);
+    --strapi-menu-option-icon-color-disabled: var(--strapi-color-neutral300);
+    --strapi-menu-option-icon-color-danger: var(--strapi-color-danger700);
+    --strapi-menu-option-icon-color-danger-disabled: var(--strapi-color-danger500);
+
+    /* Text (override on the inner text node for the default variant) */
+    --strapi-menu-option-text-color: var(--strapi-color-neutral800);
+    --strapi-menu-option-text-color-disabled: var(--strapi-color-neutral500);
+
+    /* Hover background per variant */
+    --strapi-menu-option-hover-bg: var(--strapi-color-primary100);
+    --strapi-menu-option-hover-bg-danger: var(--strapi-color-danger100);
+  }
+
   /* Common option styling (shared by item buttons + item links) */
   [data-strapi-menu-option] {
     text-align: left;
     width: 100%;
     border-radius: var(--strapi-radius);
     padding: var(--strapi-space-2) var(--strapi-space-4);
+    color: var(--strapi-menu-option-icon-color);
   }
+  [data-strapi-menu-option] [data-strapi-menu-option-text] {
+    color: var(--strapi-menu-option-text-color);
+  }
+  [data-strapi-menu-option][data-disabled] {
+    color: var(--strapi-menu-option-icon-color-disabled);
+  }
+  [data-strapi-menu-option][data-disabled] [data-strapi-menu-option-text] {
+    color: var(--strapi-menu-option-text-color-disabled);
+  }
+  [data-strapi-menu-option][data-variant='danger'] {
+    color: var(--strapi-menu-option-icon-color-danger);
+  }
+  [data-strapi-menu-option][data-variant='danger'] [data-strapi-menu-option-text] {
+    color: inherit; /* danger text matches danger icon */
+  }
+  [data-strapi-menu-option][data-variant='danger'][data-disabled] {
+    color: var(--strapi-menu-option-icon-color-danger-disabled);
+  }
+
   [data-strapi-menu-option][aria-disabled='true'] {
     cursor: not-allowed;
   }
   [data-strapi-menu-option][data-highlighted] {
-    background-color: var(--strapi-color-primary100);
+    background-color: var(--strapi-menu-option-hover-bg);
   }
   [data-strapi-menu-option][data-variant='danger'][data-highlighted] {
-    background-color: var(--strapi-color-danger100);
+    background-color: var(--strapi-menu-option-hover-bg-danger);
   }
   [data-strapi-menu-option]:focus-visible {
     outline: none;
@@ -1191,5 +1289,829 @@
   /* Label — same padding as items for visual rhythm */
   [data-strapi-menu-label] {
     padding: var(--strapi-space-2) var(--strapi-space-4);
+  }
+
+  /* ====================================================================== *
+   * POPOVER — drop-in port off styled-components                            *
+   *                                                                         *
+   * Substrate: Radix Popover. Surface + open/close animations live here so *
+   * the component is pure JSX + data hooks.                                 *
+   *                                                                         *
+   *   [data-strapi-popover-content]   floating panel (bg, border, radius,  *
+   *                                   shadow, z-index, slide animations).  *
+   *   [data-strapi-popover-scroll]    fixed-height scroll wrapper          *
+   *                                   (height = --strapi-popover-scroll-   *
+   *                                   height).                              *
+   *                                                                         *
+   * Radix decorates the content with `data-state='open|closed'` and        *
+   * `data-side='top|bottom|left|right'` — the animation rules read those.  *
+   * ====================================================================== */
+  :root {
+    --strapi-popover-bg: var(--strapi-color-neutral0);
+    --strapi-popover-border-color: var(--strapi-color-neutral150);
+    --strapi-popover-radius: var(--strapi-radius);
+    --strapi-popover-shadow: var(--strapi-shadow-filter);
+    --strapi-popover-z: var(--strapi-z-popover);
+    --strapi-popover-scroll-height: 20rem;
+  }
+
+  [data-strapi-popover-content] {
+    background-color: var(--strapi-popover-bg);
+    border: 1px solid var(--strapi-popover-border-color);
+    border-radius: var(--strapi-popover-radius);
+    box-shadow: var(--strapi-popover-shadow);
+    z-index: var(--strapi-popover-z);
+  }
+
+  @keyframes strapi-popover-slide-down-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes strapi-popover-slide-down-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes strapi-popover-slide-up-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes strapi-popover-slide-up-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-popover-content][data-state='open'] {
+      animation-duration: 200ms;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-strapi-popover-content][data-state='closed'] {
+      animation-duration: 200ms;
+      animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    [data-strapi-popover-content][data-state='open'][data-side='top'] {
+      animation-name: strapi-popover-slide-up-in;
+    }
+    [data-strapi-popover-content][data-state='open'][data-side='bottom'] {
+      animation-name: strapi-popover-slide-down-in;
+    }
+    [data-strapi-popover-content][data-state='closed'][data-side='top'] {
+      animation-name: strapi-popover-slide-up-out;
+    }
+    [data-strapi-popover-content][data-state='closed'][data-side='bottom'] {
+      animation-name: strapi-popover-slide-down-out;
+    }
+  }
+
+  [data-strapi-popover-scroll] {
+    height: var(--strapi-popover-scroll-height);
+  }
+
+  /* ====================================================================== *
+   * DIALOG — drop-in port off styled-components                             *
+   *                                                                         *
+   * Substrate: Radix AlertDialog. Backdrop + centered modal panel +        *
+   * pop-in/out animations live here.                                       *
+   *                                                                         *
+   *   [data-strapi-dialog-overlay]   fixed backdrop (neutral-tinted, fade) *
+   *   [data-strapi-dialog-content]   centered panel (bg, radius, shadow,  *
+   *                                  pop-in/out animations)               *
+   *   [data-strapi-dialog-title]     header (centered + bottom border)    *
+   *   [data-strapi-dialog-footer]    footer (top border)                  *
+   *                                                                         *
+   * Re-skin the modal via dedicated tokens — see :root block below.        *
+   * ====================================================================== */
+  :root {
+    /* Panel surface */
+    --strapi-dialog-bg: var(--strapi-color-neutral0);
+    --strapi-dialog-radius: var(--strapi-radius);
+    --strapi-dialog-shadow: var(--strapi-shadow-popup);
+    --strapi-dialog-z: var(--strapi-z-modal);
+    --strapi-dialog-divider-color: var(--strapi-color-neutral150);
+
+    /* Backdrop — tint + opacity decoupled so themes can swap either side */
+    --strapi-dialog-overlay-color: var(--strapi-color-neutral800);
+    --strapi-dialog-overlay-opacity: 20%;
+    --strapi-dialog-overlay-z: var(--strapi-z-overlay);
+  }
+
+  /* Backdrop — color-mix() composes the tint and the opacity tokens so a
+   * theme can adjust either side without touching the rule. */
+  [data-strapi-dialog-overlay] {
+    position: fixed;
+    inset: 0;
+    z-index: var(--strapi-dialog-overlay-z);
+    will-change: opacity;
+    background-color: color-mix(
+      in srgb,
+      var(--strapi-dialog-overlay-color) var(--strapi-dialog-overlay-opacity),
+      transparent
+    );
+  }
+
+  /* Centered modal panel */
+  [data-strapi-dialog-content] {
+    max-width: 42rem;
+    height: min-content;
+    width: calc(100% - var(--strapi-space-8));
+    overflow: hidden;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: var(--strapi-dialog-radius);
+    background-color: var(--strapi-dialog-bg);
+    box-shadow: var(--strapi-dialog-shadow);
+    z-index: var(--strapi-dialog-z);
+  }
+
+  [data-strapi-dialog-title] {
+    display: flex;
+    justify-content: center;
+    border-bottom: solid 1px var(--strapi-dialog-divider-color);
+  }
+
+  [data-strapi-dialog-footer] {
+    border-top: solid 1px var(--strapi-dialog-divider-color);
+  }
+
+  @keyframes strapi-dialog-overlay-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.2;
+    }
+  }
+  @keyframes strapi-dialog-pop-in {
+    from {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes strapi-dialog-pop-out {
+    from {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-dialog-overlay] {
+      animation: strapi-dialog-overlay-fade-in 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-strapi-dialog-content][data-state='open'] {
+      animation-duration: 200ms;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      animation-name: strapi-dialog-pop-in;
+    }
+    [data-strapi-dialog-content][data-state='closed'] {
+      animation-duration: 120ms;
+      animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      animation-name: strapi-dialog-pop-out;
+    }
+  }
+
+  /* ====================================================================== *
+   * DATEPICKER — drop-in port off styled-components                         *
+   *                                                                         *
+   * Substrate: Floating UI + a custom Radix-flavored data-state hookup.     *
+   *                                                                         *
+   *   [data-strapi-datepicker-trigger]    field wrapper (border/padding/   *
+   *     [data-size='S'|'M']               focus state, error, disabled).   *
+   *     [data-has-error] [data-has-value] [data-has-clear] [data-disabled] *
+   *   [data-strapi-datepicker-input]      the text input inside trigger.   *
+   *   [data-strapi-datepicker-content]    floating panel (bg, border,     *
+   *     [data-state='open'] [data-side]   shadow, z, slide animation).     *
+   *   [data-strapi-datepicker-toolbar]    month/year combobox row above   *
+   *                                       the calendar grid.              *
+   *   [data-strapi-datepicker-header-cell] day-name cells in <thead>.     *
+   *   [data-strapi-datepicker-cell]       day cells. State via             *
+   *     [aria-selected] [aria-disabled] [data-outside-month].             *
+   * ====================================================================== */
+  :root {
+    /* Trigger field */
+    --strapi-datepicker-trigger-bg: var(--strapi-color-neutral0);
+    --strapi-datepicker-trigger-color: var(--strapi-color-neutral800);
+    --strapi-datepicker-trigger-border-color: var(--strapi-color-neutral200);
+    --strapi-datepicker-trigger-border-color-error: var(--strapi-color-danger600);
+    --strapi-datepicker-trigger-border-focus: var(--strapi-color-primary600);
+    --strapi-datepicker-trigger-disabled-bg: var(--strapi-color-neutral150);
+    --strapi-datepicker-trigger-disabled-color: var(--strapi-color-neutral600);
+    --strapi-datepicker-trigger-placeholder-color: var(--strapi-color-neutral600);
+    --strapi-datepicker-trigger-min-width: 130px;
+    --strapi-datepicker-trigger-min-width-with-clear: 160px;
+
+    /* Floating content panel */
+    --strapi-datepicker-content-bg: var(--strapi-color-neutral0);
+    --strapi-datepicker-content-border-color: var(--strapi-color-neutral150);
+    --strapi-datepicker-content-shadow: var(--strapi-shadow-filter);
+    --strapi-datepicker-content-z: var(--strapi-z-popover);
+
+    /* Month/year toolbar — restyles SingleSelect comboboxes to be borderless */
+    --strapi-datepicker-toolbar-trigger-hover-bg: var(--strapi-color-neutral100);
+    --strapi-datepicker-toolbar-trigger-icon-color: var(--strapi-color-neutral500);
+
+    /* Day cells */
+    --strapi-datepicker-cell-color: var(--strapi-color-neutral900);
+    --strapi-datepicker-cell-bg: var(--strapi-color-neutral0);
+    --strapi-datepicker-cell-bg-hover: var(--strapi-color-primary100);
+    --strapi-datepicker-cell-color-hover: var(--strapi-color-primary600);
+    --strapi-datepicker-cell-bg-selected: var(--strapi-color-primary100);
+    --strapi-datepicker-cell-color-selected: var(--strapi-color-primary600);
+    --strapi-datepicker-cell-color-outside: var(--strapi-color-neutral600);
+  }
+
+  /* Trigger -------------------------------------------------------------- */
+  [data-strapi-datepicker-trigger] {
+    min-width: var(--strapi-datepicker-trigger-min-width);
+    border: 1px solid var(--strapi-datepicker-trigger-border-color);
+    background-color: var(--strapi-datepicker-trigger-bg);
+    color: var(--strapi-datepicker-trigger-color);
+    padding-inline: var(--strapi-space-3);
+    padding-block: calc(var(--strapi-space-3) - 1px); /* -1px for border */
+    transition-property: border-color, box-shadow, fill;
+    transition-duration: 0.2s;
+  }
+  [data-strapi-datepicker-trigger][data-has-clear] {
+    min-width: var(--strapi-datepicker-trigger-min-width-with-clear);
+  }
+  [data-strapi-datepicker-trigger][data-size='S'] {
+    padding-block: calc(var(--strapi-space-2) - 1px);
+  }
+  /* Tightened padding when the value + clear button compete for space */
+  [data-strapi-datepicker-trigger][data-has-value][data-has-clear] {
+    padding-block: calc(var(--strapi-space-2) - 1px);
+  }
+  [data-strapi-datepicker-trigger][data-size='S'][data-has-value][data-has-clear] {
+    padding-block: calc(var(--strapi-space-1) - 1px);
+  }
+  @media (min-width: 48em) {
+    [data-strapi-datepicker-trigger] {
+      padding-block: var(--strapi-space-2);
+    }
+    [data-strapi-datepicker-trigger][data-size='S'] {
+      padding-block: var(--strapi-space-1);
+    }
+  }
+  [data-strapi-datepicker-trigger] > svg {
+    flex: 1 0 auto;
+  }
+  [data-strapi-datepicker-trigger][data-has-error] {
+    border-color: var(--strapi-datepicker-trigger-border-color-error);
+  }
+  [data-strapi-datepicker-trigger][data-disabled] {
+    background-color: var(--strapi-datepicker-trigger-disabled-bg);
+    color: var(--strapi-datepicker-trigger-disabled-color);
+    cursor: not-allowed;
+  }
+  [data-strapi-datepicker-trigger]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-datepicker-trigger]:focus-within {
+    border-color: var(--strapi-datepicker-trigger-border-focus);
+    box-shadow: var(--strapi-datepicker-trigger-border-focus) 0 0 0 2px;
+  }
+  [data-strapi-datepicker-trigger][data-has-error]:focus-within {
+    border-color: var(--strapi-datepicker-trigger-border-color-error);
+    box-shadow: var(--strapi-datepicker-trigger-border-color-error) 0 0 0 2px;
+  }
+
+  /* Text input inside trigger ------------------------------------------- */
+  [data-strapi-datepicker-input] {
+    width: 100%;
+    color: var(--strapi-datepicker-trigger-color);
+    background-color: transparent;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 2.4rem;
+  }
+  @media (min-width: 48em) {
+    [data-strapi-datepicker-input] {
+      font-size: 1.4rem;
+      line-height: 2.2rem;
+    }
+  }
+  [data-strapi-datepicker-input]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-datepicker-input]::placeholder {
+    color: var(--strapi-datepicker-trigger-placeholder-color);
+    opacity: 1;
+  }
+  [data-strapi-datepicker-input][aria-disabled='true'] {
+    cursor: inherit;
+  }
+
+  /* Floating content panel ----------------------------------------------- */
+  [data-strapi-datepicker-content] {
+    background-color: var(--strapi-datepicker-content-bg);
+    border: 1px solid var(--strapi-datepicker-content-border-color);
+    box-shadow: var(--strapi-datepicker-content-shadow);
+    z-index: var(--strapi-datepicker-content-z);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-datepicker-content][data-state='open'] {
+      animation-duration: 200ms;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-strapi-datepicker-content][data-state='open'][data-side='bottom'] {
+      animation-name: strapi-popover-slide-down-in;
+    }
+    [data-strapi-datepicker-content][data-state='open'][data-side='top'] {
+      animation-name: strapi-popover-slide-up-in;
+    }
+  }
+
+  /* Month/year toolbar — restyles the inner SingleSelect comboboxes to
+   * look like borderless type selectors, hover-tinted. */
+  [data-strapi-datepicker-toolbar] div[role='combobox'] {
+    border: 1px solid transparent;
+    background: transparent;
+    font-weight: var(--strapi-font-weight-bold);
+  }
+  [data-strapi-datepicker-toolbar] div[role='combobox'] svg {
+    fill: var(--strapi-datepicker-toolbar-trigger-icon-color);
+  }
+  [data-strapi-datepicker-toolbar] div[role='combobox']:hover {
+    background-color: var(--strapi-datepicker-toolbar-trigger-hover-bg);
+  }
+
+  /* Day-name header cells */
+  [data-strapi-datepicker-header-cell] {
+    border-radius: var(--strapi-radius);
+    text-transform: capitalize;
+  }
+
+  /* Day cells ------------------------------------------------------------ */
+  [data-strapi-datepicker-cell] {
+    text-align: center;
+    padding: 0.7rem;
+    /* tighter outline-offset than the global Table cell because the day
+     * cells sit inside a popover with limited padding */
+    outline-offset: -2px;
+    background-color: var(--strapi-datepicker-cell-bg);
+    color: var(--strapi-datepicker-cell-color);
+  }
+  [data-strapi-datepicker-cell][aria-selected='true'] {
+    background-color: var(--strapi-datepicker-cell-bg-selected);
+    color: var(--strapi-datepicker-cell-color-selected);
+  }
+  [data-strapi-datepicker-cell][data-outside-month] {
+    color: var(--strapi-datepicker-cell-color-outside);
+  }
+  [data-strapi-datepicker-cell][aria-disabled='true'] {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  [data-strapi-datepicker-cell][aria-disabled='false']:hover {
+    background-color: var(--strapi-datepicker-cell-bg-hover);
+    color: var(--strapi-datepicker-cell-color-hover);
+  }
+
+  /* ====================================================================== *
+   * COMBOBOX — drop-in port off styled-components                           *
+   *                                                                         *
+   * Substrate: @strapi/ui-primitives Combobox + Floating UI. Trigger field, *
+   * text input, dropdown panel, options, create-item footer, no-value-found *
+   * empty state all keyed on data hooks.                                   *
+   *                                                                         *
+   *   [data-strapi-combobox-trigger]      field wrapper                    *
+   *     [data-size='S'|'M'] [data-has-error] [data-has-value]              *
+   *     [data-has-clear] [data-disabled]                                   *
+   *   [data-strapi-combobox-input]        the inner text input              *
+   *   [data-strapi-combobox-icon]         caret-down chevron                *
+   *   [data-strapi-combobox-content]      floating panel (bg/border/shadow/ *
+   *     [data-state='open'] [data-side]   z + slide animation)              *
+   *   [data-strapi-combobox-option]       item button                       *
+   *     [data-state='checked']            selected state                    *
+   *     [data-highlighted]                keyboard-highlighted state        *
+   *     [data-no-hover]                   suppress hover bg (used by         *
+   *                                       NoValueFound empty state)         *
+   *   [data-strapi-combobox-create-item]  sticky-bottom create row          *
+   * ====================================================================== */
+  :root {
+    /* Trigger field */
+    --strapi-combobox-trigger-bg: var(--strapi-color-neutral0);
+    --strapi-combobox-trigger-color: var(--strapi-color-neutral800);
+    --strapi-combobox-trigger-border-color: var(--strapi-color-neutral200);
+    --strapi-combobox-trigger-border-color-error: var(--strapi-color-danger600);
+    --strapi-combobox-trigger-border-focus: var(--strapi-color-primary600);
+    --strapi-combobox-trigger-disabled-bg: var(--strapi-color-neutral150);
+    --strapi-combobox-trigger-disabled-color: var(--strapi-color-neutral600);
+    --strapi-combobox-trigger-placeholder-color: var(--strapi-color-neutral600);
+    --strapi-combobox-trigger-icon-color: var(--strapi-color-neutral600);
+
+    /* Floating content panel */
+    --strapi-combobox-content-bg: var(--strapi-color-neutral0);
+    --strapi-combobox-content-border-color: var(--strapi-color-neutral150);
+    --strapi-combobox-content-shadow: var(--strapi-shadow-filter);
+    --strapi-combobox-content-z: var(--strapi-z-popover);
+    --strapi-combobox-content-focus-outline: var(--strapi-color-primary600);
+    --strapi-combobox-content-max-height: 15rem;
+
+    /* Options */
+    --strapi-combobox-option-bg: var(--strapi-color-neutral0);
+    --strapi-combobox-option-bg-hover: var(--strapi-color-primary100);
+    --strapi-combobox-option-color-hover: var(--strapi-color-primary600);
+    --strapi-combobox-option-bg-selected: var(--strapi-color-primary100);
+    --strapi-combobox-option-color-selected: var(--strapi-color-primary600);
+    --strapi-combobox-option-disabled-color: var(--strapi-color-neutral600);
+    --strapi-combobox-option-disabled-icon-fill: var(--strapi-color-neutral300);
+  }
+
+  /* Trigger field --------------------------------------------------------- */
+  [data-strapi-combobox-trigger] {
+    position: relative;
+    border: 1px solid var(--strapi-combobox-trigger-border-color);
+    border-radius: var(--strapi-radius);
+    background-color: var(--strapi-combobox-trigger-bg);
+    color: var(--strapi-combobox-trigger-color);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--strapi-space-4);
+    padding-inline-start: var(--strapi-space-4);
+    padding-inline-end: var(--strapi-space-3);
+    padding-block: calc(var(--strapi-space-3) - 1px);
+    transition-property: border-color, box-shadow, fill;
+    transition-duration: 0.2s;
+  }
+  [data-strapi-combobox-trigger][data-size='S'] {
+    padding-block: calc(var(--strapi-space-2) - 1px);
+  }
+  [data-strapi-combobox-trigger][data-has-value][data-has-clear] {
+    padding-block: calc(var(--strapi-space-2) - 1px);
+  }
+  [data-strapi-combobox-trigger][data-size='S'][data-has-value][data-has-clear] {
+    padding-block: calc(var(--strapi-space-1) - 1px);
+  }
+  @media (min-width: 48em) {
+    [data-strapi-combobox-trigger] {
+      padding-block: var(--strapi-space-2);
+    }
+    [data-strapi-combobox-trigger][data-size='S'] {
+      padding-block: var(--strapi-space-1);
+    }
+  }
+  [data-strapi-combobox-trigger][data-has-error] {
+    border-color: var(--strapi-combobox-trigger-border-color-error);
+  }
+  [data-strapi-combobox-trigger][data-disabled] {
+    background-color: var(--strapi-combobox-trigger-disabled-bg);
+    color: var(--strapi-combobox-trigger-disabled-color);
+    cursor: not-allowed;
+  }
+  [data-strapi-combobox-trigger]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-combobox-trigger]:focus-within {
+    border-color: var(--strapi-combobox-trigger-border-focus);
+    box-shadow: var(--strapi-combobox-trigger-border-focus) 0 0 0 2px;
+  }
+  [data-strapi-combobox-trigger][data-has-error]:focus-within {
+    border-color: var(--strapi-combobox-trigger-border-color-error);
+    box-shadow: var(--strapi-combobox-trigger-border-color-error) 0 0 0 2px;
+  }
+
+  /* Text input (inside trigger) ------------------------------------------ */
+  [data-strapi-combobox-input] {
+    width: 100%;
+    color: var(--strapi-combobox-trigger-color);
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    text-overflow: ellipsis;
+    font-size: 1.6rem;
+    line-height: 2.4rem;
+  }
+  @media (min-width: 48em) {
+    [data-strapi-combobox-input] {
+      font-size: 1.4rem;
+      line-height: 2.2rem;
+    }
+  }
+  [data-strapi-combobox-input]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-combobox-input]::placeholder {
+    color: var(--strapi-combobox-trigger-placeholder-color);
+    opacity: 1;
+  }
+  [data-strapi-combobox-input][aria-disabled='true'] {
+    cursor: inherit;
+  }
+
+  /* Caret-down chevron --------------------------------------------------- */
+  [data-strapi-combobox-icon] {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: var(--strapi-combobox-trigger-icon-color);
+    display: flex;
+  }
+  [data-strapi-combobox-icon][aria-disabled='true'] {
+    cursor: inherit;
+  }
+
+  /* Floating panel ------------------------------------------------------- */
+  [data-strapi-combobox-content] {
+    background-color: var(--strapi-combobox-content-bg);
+    border: 1px solid var(--strapi-combobox-content-border-color);
+    border-radius: var(--strapi-radius);
+    box-shadow: var(--strapi-combobox-content-shadow);
+    width: var(--radix-combobox-trigger-width);
+    max-height: var(--strapi-combobox-content-max-height);
+    z-index: var(--strapi-combobox-content-z);
+  }
+  [data-strapi-combobox-content]:focus-visible {
+    outline: 2px solid var(--strapi-combobox-content-focus-outline);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-combobox-content][data-state='open'] {
+      animation-duration: 200ms;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-strapi-combobox-content][data-state='open'][data-side='bottom'] {
+      animation-name: strapi-popover-slide-down-in;
+    }
+    [data-strapi-combobox-content][data-state='open'][data-side='top'] {
+      animation-name: strapi-popover-slide-up-in;
+    }
+  }
+
+  /* Option items --------------------------------------------------------- */
+  [data-strapi-combobox-option] {
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline-offset: -3px;
+    padding: var(--strapi-space-2) var(--strapi-space-4);
+    background-color: var(--strapi-combobox-option-bg);
+    border-radius: var(--strapi-radius);
+    user-select: none;
+  }
+  [data-strapi-combobox-option][data-state='checked'] {
+    background-color: var(--strapi-combobox-option-bg-selected);
+    color: var(--strapi-combobox-option-color-selected);
+    font-weight: bold;
+  }
+  [data-strapi-combobox-option]:hover,
+  [data-strapi-combobox-option][data-highlighted] {
+    outline: none;
+    background-color: var(--strapi-combobox-option-bg-hover);
+  }
+  [data-strapi-combobox-option][data-no-hover]:hover,
+  [data-strapi-combobox-option][data-no-hover][data-highlighted] {
+    background-color: var(--strapi-combobox-option-bg);
+  }
+  [data-strapi-combobox-option][data-highlighted] {
+    color: var(--strapi-combobox-option-color-hover);
+    font-weight: bold;
+  }
+
+  /* Create-item (sticky-bottom row when creatable=true) ------------------ */
+  [data-strapi-combobox-create-item] {
+    border-top: 1px solid var(--strapi-combobox-content-border-color);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background-color: var(--strapi-combobox-content-bg);
+    cursor: pointer;
+    padding: var(--strapi-space-1);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+  }
+  [data-strapi-combobox-create-item]:hover,
+  [data-strapi-combobox-create-item][data-highlighted] {
+    background-color: var(--strapi-combobox-content-bg);
+  }
+  [data-strapi-combobox-create-item][data-disabled] {
+    color: var(--strapi-combobox-option-disabled-color);
+    cursor: not-allowed;
+  }
+  [data-strapi-combobox-create-item][data-disabled] svg {
+    fill: var(--strapi-combobox-option-disabled-icon-fill);
+  }
+  [data-strapi-combobox-create-item] > div {
+    padding: var(--strapi-space-2) var(--strapi-space-4);
+  }
+  [data-strapi-combobox-create-item] > div:hover,
+  [data-strapi-combobox-create-item][data-highlighted] > div {
+    background-color: var(--strapi-combobox-option-bg-hover);
+    border-radius: var(--strapi-radius);
+  }
+  [data-strapi-combobox-create-item][data-disabled] > div {
+    background-color: inherit;
+  }
+
+  /* ====================================================================== *
+   * TIMEPICKER — drop-in port off styled-components                         *
+   *                                                                         *
+   * Migration was a single rule: min-width on the Combobox root. Two       *
+   * variants based on whether the clearable button is rendered.            *
+   *                                                                         *
+   *   [data-strapi-timepicker]                base min-width               *
+   *   [data-strapi-timepicker][data-has-clear] wider to fit clear button   *
+   * ====================================================================== */
+  :root {
+    --strapi-timepicker-min-width: 130px;
+    --strapi-timepicker-min-width-with-clear: 160px;
+  }
+  [data-strapi-timepicker] {
+    min-width: var(--strapi-timepicker-min-width);
+  }
+  [data-strapi-timepicker][data-has-clear] {
+    min-width: var(--strapi-timepicker-min-width-with-clear);
+  }
+
+  /* ====================================================================== *
+   * TABLE — drop-in port off styled-components                              *
+   *                                                                         *
+   * Components: Table, Thead, Tbody, Tr, Th, Td, TFooter.                   *
+   *                                                                         *
+   *   [data-strapi-table-shell]     outer container (overflow, border)     *
+   *   [data-strapi-table-scroll]    overflow-indicator wrapper             *
+   *      [data-overflow='left']     ::before gradient shadow on left      *
+   *      [data-overflow='right']    ::after  gradient shadow on right     *
+   *      [data-overflow='both']     both gradients render                 *
+   *   [data-strapi-table-viewport]  horizontally-scrolling viewport        *
+   *   [data-strapi-table]           the <table> itself (width, nowrap)    *
+   *   [data-strapi-thead]           bottom border                          *
+   *   [data-strapi-tbody] tr:last   no trailing border                    *
+   *   [data-strapi-tr]              row border + per-cell padding rules   *
+   *   [data-strapi-cell]            vertical-align + checkbox alignment   *
+   *   [data-strapi-tfooter]         footer button (full-width, rounded)   *
+   *   [data-strapi-tfooter-icon]    circular icon-button background       *
+   * ====================================================================== */
+
+  /* Outer shell — hides scroll-shadow overflow inside the border */
+  [data-strapi-table-shell] {
+    overflow: hidden;
+    border: 1px solid var(--strapi-color-neutral150);
+  }
+
+  /* Horizontal-scroll viewport */
+  [data-strapi-table-viewport] {
+    overflow-x: auto;
+  }
+
+  /* Overflow-indicator container — base props for the pseudo-elements */
+  [data-strapi-table-scroll]::before,
+  [data-strapi-table-scroll]::after {
+    position: absolute;
+    height: 100%;
+    width: var(--strapi-space-2);
+    opacity: 0.2;
+    box-shadow: var(--strapi-shadow-tableShadow);
+    pointer-events: none;
+  }
+  [data-strapi-table-scroll][data-overflow='left']::before,
+  [data-strapi-table-scroll][data-overflow='both']::before {
+    content: '';
+    left: 0;
+    top: 0;
+    background: linear-gradient(
+      90deg,
+      var(--strapi-color-neutral200) 0%,
+      transparent 100%
+    );
+  }
+  [data-strapi-table-scroll][data-overflow='right']::after,
+  [data-strapi-table-scroll][data-overflow='both']::after {
+    content: '';
+    right: 0;
+    top: 0;
+    background: linear-gradient(
+      270deg,
+      var(--strapi-color-neutral200) 0%,
+      transparent 100%
+    );
+  }
+
+  /* The <table> itself — full width, no row wrapping */
+  [data-strapi-table] {
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  /* Thead — bottom separator from body */
+  [data-strapi-thead] {
+    border-bottom: 1px solid var(--strapi-color-neutral150);
+  }
+
+  /* Tbody — last row drops its own bottom border so it doesn't double up
+   * with the shell's outer border */
+  [data-strapi-tbody] tr:last-of-type {
+    border-bottom: none;
+  }
+
+  /* Tr — row separator + uniform cell padding, with a tighter first cell
+   * (typically the row-selection checkbox column) */
+  [data-strapi-tr] {
+    border-bottom: 1px solid var(--strapi-color-neutral150);
+  }
+  [data-strapi-tr] td,
+  [data-strapi-tr] th {
+    padding: var(--strapi-space-4);
+  }
+  [data-strapi-tr] td:first-of-type,
+  [data-strapi-tr] th:first-of-type {
+    padding: 0 var(--strapi-space-1);
+  }
+  [data-strapi-tr] th {
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 5.6rem;
+  }
+
+  /* Cell (Th/Td) — alignment + checkbox sub-baseline tweak */
+  [data-strapi-cell] {
+    vertical-align: middle;
+    text-align: left;
+    outline-offset: -4px;
+  }
+  [data-strapi-cell] input {
+    vertical-align: sub;
+  }
+
+  /* ------------------------------------------------------------------- *
+   * TFooter semantic tokens
+   *
+   * Defaults reference the primary scale so the out-of-box look matches
+   * the legacy styled-components TFooter. To re-theme just the footer
+   * (e.g. a "secondary action" surface) override these at @layer app
+   * or inside a theme block — no need to rebrand --strapi-color-primary*.
+   * ------------------------------------------------------------------- */
+  :root {
+    --strapi-tfooter-bg: var(--strapi-color-primary100);
+    --strapi-tfooter-color: var(--strapi-color-primary600);
+    --strapi-tfooter-icon-bg: var(--strapi-color-primary200);
+    --strapi-tfooter-icon-fill: var(--strapi-color-primary600);
+  }
+
+  /* TFooter — full-width button anchored to the bottom of the shell.
+   * `color` set here so the inner Typography (which emits
+   * color: currentcolor inline when no textColor is passed) inherits. */
+  [data-strapi-tfooter] {
+    display: block;
+    width: 100%;
+    border: none;
+    border-radius: 0 0 var(--strapi-radius) var(--strapi-radius);
+    background-color: var(--strapi-tfooter-bg);
+    color: var(--strapi-tfooter-color);
+    cursor: pointer;
+  }
+
+  /* TFooter icon — round chip with the brand-fill SVG */
+  [data-strapi-tfooter-icon] {
+    height: 2.4rem;
+    width: 2.4rem;
+    border-radius: 50%;
+    background-color: var(--strapi-tfooter-icon-bg);
+  }
+  [data-strapi-tfooter-icon] svg {
+    height: 1rem;
+    width: 1rem;
+  }
+  [data-strapi-tfooter-icon] svg path {
+    fill: var(--strapi-tfooter-icon-fill);
   }
 }

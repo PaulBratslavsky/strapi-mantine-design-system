@@ -1,15 +1,17 @@
+/**
+ * Tbody — drop-in port off styled-components.
+ *
+ * Only styled rule removed the bottom border from the last tr. Moved to
+ * `[data-strapi-tbody] tr:last-of-type` in `componentPolish.css`.
+ */
 import * as React from 'react';
-
-import { styled } from 'styled-components';
 
 import { RawTbody, RawTbodyProps } from '../RawTable/RawTbody';
 
-const TbodyWrapper = styled(RawTbody)`
-  & tr:last-of-type {
-    border-bottom: none;
-  }
-`;
-
 export const Tbody = ({ children, ...props }: RawTbodyProps) => {
-  return <TbodyWrapper {...props}>{children}</TbodyWrapper>;
+  return (
+    <RawTbody data-strapi-tbody="" {...props}>
+      {children}
+    </RawTbody>
+  );
 };

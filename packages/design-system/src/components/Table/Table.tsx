@@ -1,95 +1,80 @@
+/**
+ * Table — drop-in port off styled-components.
+ *
+ * The three styled wrappers (TableContainer, TableBox, ScrollContainer)
+ * collapse to data-attribute-tagged Box primitives. CSS lives in
+ * `[data-strapi-table-shell]`, `[data-strapi-table-scroll]`, and
+ * `[data-strapi-table]` rules in `componentPolish.css`.
+ *
+ * Overflow shadows on the scroll container are signaled via a
+ * `data-overflow` attribute (`left | right | both`); the CSS selects
+ * which side(s) render the gradient overlay.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, BoxComponent } from '../../primitives/Box';
+import { Box } from '../../primitives/Box';
 import { RawTable, RawTableProps } from '../RawTable/RawTable';
 
-const TableContainer = styled<BoxComponent>(Box)`
-  overflow: hidden;
-  border: 1px solid ${({ theme }) => theme.colors.neutral150};
-`;
-
-const TableWrapper = styled(RawTable)`
-  width: 100%;
-  white-space: nowrap;
-`;
-
 export type Overflowing = 'both' | 'left' | 'right';
-
-const TableBox = styled<BoxComponent>(Box)<{ $overflowing?: Overflowing }>`
-  &:before {
-    // TODO: make sure to add a token for this weird stuff
-    background: linear-gradient(90deg, #c0c0cf 0%, rgba(0, 0, 0, 0) 100%);
-    opacity: 0.2;
-    position: absolute;
-    height: 100%;
-    content: ${({ $overflowing }) => ($overflowing === 'both' || $overflowing === 'left' ? "''" : undefined)};
-    box-shadow: ${({ theme }) => theme.shadows.tableShadow};
-    width: ${({ theme }) => theme.spaces[2]};
-    left: 0;
-  }
-
-  &:after {
-    // TODO: make sure to add a token for this weird stuff
-    background: linear-gradient(270deg, #c0c0cf 0%, rgba(0, 0, 0, 0) 100%);
-    opacity: 0.2;
-    position: absolute;
-    height: 100%;
-    content: ${({ $overflowing }) => ($overflowing === 'both' || $overflowing === 'right' ? "''" : undefined)};
-    box-shadow: ${({ theme }) => theme.shadows.tableShadow};
-    width: ${({ theme }) => theme.spaces[2]};
-    right: 0;
-    top: 0;
-  }
-`;
-
-const ScrollContainer = styled<BoxComponent>(Box)`
-  overflow-x: auto;
-`;
 
 export interface TableProps extends RawTableProps {
   footer?: React.ReactNode;
 }
 
-export const Table = React.forwardRef<HTMLTableElement, TableProps>(({ footer, ...props }, forwardedRef) => {
-  const tableRef = React.useRef<HTMLDivElement>(null!);
-  const [overflowing, setOverflowing] = React.useState<Overflowing>();
+export const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ footer, ...props }, forwardedRef) => {
+    const tableRef = React.useRef<HTMLDivElement>(null!);
+    const [overflowing, setOverflowing] = React.useState<Overflowing>();
 
-  const handleScroll = (e) => {
-    const maxScrollLeft = e.target.scrollWidth - e.target.clientWidth;
+    const handleScroll: React.UIEventHandler<HTMLDivElement> = (e) => {
+      const target = e.currentTarget;
+      const maxScrollLeft = target.scrollWidth - target.clientWidth;
 
-    if (e.target.scrollLeft === 0) {
-      setOverflowing('right');
+      if (target.scrollLeft === 0) {
+        setOverflowing('right');
+        return;
+      }
 
-      return;
-    }
+      if (target.scrollLeft === maxScrollLeft) {
+        setOverflowing('left');
+        return;
+      }
 
-    if (e.target.scrollLeft === maxScrollLeft) {
-      setOverflowing('left');
+      if (target.scrollLeft > 0) {
+        setOverflowing('both');
+      }
+    };
 
-      return;
-    }
+    React.useEffect(() => {
+      if (tableRef.current.scrollWidth > tableRef.current.clientWidth) {
+        setOverflowing('right');
+      }
+    }, []);
 
-    if (e.target.scrollLeft > 0) {
-      setOverflowing('both');
-    }
-  };
-
-  React.useEffect(() => {
-    if (tableRef.current.scrollWidth > tableRef.current.clientWidth) {
-      setOverflowing('right');
-    }
-  }, []);
-
-  return (
-    <TableContainer shadow="tableShadow" hasRadius background="neutral0">
-      <TableBox $overflowing={overflowing} position="relative">
-        <ScrollContainer ref={tableRef} onScroll={handleScroll} paddingLeft={6} paddingRight={6}>
-          <TableWrapper ref={forwardedRef} {...props} />
-        </ScrollContainer>
-      </TableBox>
-      {footer}
-    </TableContainer>
-  );
-});
+    return (
+      <Box
+        shadow="tableShadow"
+        hasRadius
+        background="neutral0"
+        data-strapi-table-shell=""
+      >
+        <Box
+          position="relative"
+          data-strapi-table-scroll=""
+          data-overflow={overflowing || undefined}
+        >
+          <Box
+            ref={tableRef}
+            onScroll={handleScroll}
+            paddingLeft={6}
+            paddingRight={6}
+            data-strapi-table-viewport=""
+          >
+            <RawTable ref={forwardedRef} data-strapi-table="" {...props} />
+          </Box>
+        </Box>
+        {footer}
+      </Box>
+    );
+  },
+);

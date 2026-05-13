@@ -21,7 +21,6 @@ import { FocusScope } from '@radix-ui/react-focus-scope';
 import { Calendar, Cross } from '@strapi/icons';
 import { composeEventHandlers } from '@strapi/ui-primitives';
 import { RemoveScroll } from 'react-remove-scroll';
-import { styled, type DefaultTheme } from 'styled-components';
 
 import { createContext } from '../../helpers/context';
 import { useComposedRefs } from '../../hooks/useComposeRefs';
@@ -29,12 +28,9 @@ import { useControllableState } from '../../hooks/useControllableState';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
 import { useId } from '../../hooks/useId';
 import { useIsomorphicLayoutEffect } from '../../hooks/useIsomorphicLayoutEffect';
-import { Box, BoxComponent, BoxProps } from '../../primitives/Box';
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
+import { Box, BoxProps } from '../../primitives/Box';
+import { Flex, FlexProps } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
-import { inputTextStyles, clearableFieldPaddingStyles } from '../../styles/input';
-import { ANIMATIONS } from '../../styles/motion';
-import { inputFocusStyle } from '../../themes';
 import { useDesignSystem } from '../../utilities/DesignSystemProvider';
 import { DismissibleLayer, DismissibleLayerProps } from '../../utilities/DismissibleLayer';
 import { Portal } from '../../utilities/Portal';
@@ -384,17 +380,18 @@ const DatePickerTrigger = React.forwardRef<DatePickerTriggerElement, TriggerProp
           event.preventDefault();
         }}
       >
-        <TriggerElement
+        <Flex
           ref={composedRefs}
-          $hasError={hasError}
-          $hasTextValue={Boolean(context.textValue)}
-          $size={size}
-          $hasOnClear={Boolean(context.onClear)}
+          data-strapi-datepicker-trigger=""
+          data-has-error={hasError ? '' : undefined}
+          data-has-value={context.textValue ? '' : undefined}
+          data-size={size || 'M'}
+          data-has-clear={context.onClear ? '' : undefined}
+          data-disabled={context.disabled ? '' : undefined}
           {...restProps}
           hasRadius
           gap={3}
           overflow="hidden"
-          background={context.disabled ? 'neutral150' : 'neutral0'}
           onClick={composeEventHandlers(restProps.onClick, () => {
             // Whilst browsers generally have no issue focusing the trigger when clicking
             // on a label, Safari seems to struggle with the fact that there's no `onClick`.
@@ -437,41 +434,6 @@ const DatePickerTrigger = React.forwardRef<DatePickerTriggerElement, TriggerProp
     );
   },
 );
-
-const TriggerElement = styled<FlexComponent>(Flex)<{
-  $hasError?: boolean;
-  $hasTextValue?: boolean;
-  $size: TriggerProps['size'];
-  $hasOnClear?: boolean;
-}>`
-  min-width: ${({ $hasOnClear }) => ($hasOnClear ? '160px' : '130px')};
-  border: 1px solid ${({ theme, $hasError }) => ($hasError ? theme.colors.danger600 : theme.colors.neutral200)};
-  padding-inline: ${({ theme }) => theme.spaces[3]};
-  ${({ $size, $hasTextValue, $hasOnClear, theme }) =>
-    clearableFieldPaddingStyles({
-      $size: $size || 'M',
-      $hasValue: $hasTextValue || false,
-      $hasClear: $hasOnClear || false,
-      theme,
-    })}
-
-  & > svg {
-    flex: 1 0 auto;
-  }
-
-  &[data-disabled] {
-    color: ${({ theme }) => theme.colors.neutral600};
-    background: ${({ theme }) => theme.colors.neutral150};
-    cursor: not-allowed;
-  }
-
-  /* Required to ensure the below inputFocusStyles are adhered too */
-  &:focus-visible {
-    outline: none;
-  }
-
-  ${({ theme, $hasError }) => inputFocusStyle()({ theme, $hasError })};
-`;
 
 /* -------------------------------------------------------------------------------------------------
  *  DatePickerTextInput
@@ -535,7 +497,8 @@ const DatePickerTextInput = React.forwardRef<DatePickerTextInputElement, TextInp
     const inputPattern = dateFormatPlaceholder.map((part) => `\\d{${part.length}}`).join(`\\${separator}`);
 
     return (
-      <Input
+      <input
+        data-strapi-datepicker-input=""
         role="combobox"
         type="text"
         inputMode="numeric"
@@ -746,26 +709,6 @@ function constrainValue(date: CalendarDate, minValue: CalendarDate, maxValue: Ca
   return date;
 }
 
-const Input = styled.input`
-  width: 100%;
-  ${inputTextStyles}
-  color: ${({ theme }) => theme.colors.neutral800};
-  border: none;
-  background-color: transparent;
-
-  &:focus-visible {
-    outline: none;
-  }
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.neutral600};
-    opacity: 1;
-  }
-
-  &[aria-disabled='true'] {
-    cursor: inherit;
-  }
-`;
 
 /* -------------------------------------------------------------------------------------------------
  *  DatePickerContent
@@ -868,8 +811,9 @@ const DatePickerContentImpl = React.forwardRef<DatePickerContentImplElement, Con
             onOpenChange(false);
           }}
         >
-          <ContentElement
+          <Box
             ref={composedRefs}
+            data-strapi-datepicker-content=""
             data-state={context.open ? 'open' : 'closed'}
             data-side={placement.includes('top') ? 'top' : 'bottom'}
             onContextMenu={(event) => event.preventDefault()}
@@ -883,7 +827,6 @@ const DatePickerContentImpl = React.forwardRef<DatePickerContentImplElement, Con
               position: strategy,
             }}
             hasRadius
-            background="neutral0"
             padding={1}
             {...restProps}
           />
@@ -893,27 +836,6 @@ const DatePickerContentImpl = React.forwardRef<DatePickerContentImplElement, Con
   },
 );
 
-const ContentElement = styled<BoxComponent>(Box)`
-  box-shadow: ${({ theme }) => theme.shadows.filterShadow};
-  z-index: ${({ theme }) => theme.zIndices.popover};
-  border: 1px solid ${({ theme }) => theme.colors.neutral150};
-
-  @media (prefers-reduced-motion: no-preference) {
-    animation-duration: ${(props) => props.theme.motion.timings['200']};
-
-    &[data-state='open'] {
-      animation-timing-function: ${(props) => props.theme.motion.easings.authenticMotion};
-
-      &[data-side='top'] {
-        animation-name: ${ANIMATIONS.slideUpIn};
-      }
-
-      &[data-side='bottom'] {
-        animation-name: ${ANIMATIONS.slideDownIn};
-      }
-    }
-  }
-`;
 
 /* -------------------------------------------------------------------------------------------------
  *  DatePickerCalendar
@@ -1025,7 +947,14 @@ const DatePickerCalendar = React.forwardRef<HTMLDivElement, CalendarProps>(
         textValueFormatter={textValueFormatter}
       >
         <Flex ref={ref} direction="column" alignItems="stretch" padding={4} {...restProps}>
-          <ToolbarFlex justifyContent="flex-start" paddingBottom={4} paddingLeft={2} paddingRight={2} gap={2}>
+          <Flex
+            data-strapi-datepicker-toolbar=""
+            justifyContent="flex-start"
+            paddingBottom={4}
+            paddingLeft={2}
+            paddingRight={2}
+            gap={2}
+          >
             {/* these are wrapped in their own Field root so they don't get confused with the potential wrapper of the combobox */}
             <Field.Root>
               <SingleSelect
@@ -1053,7 +982,7 @@ const DatePickerCalendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                 ))}
               </SingleSelect>
             </Field.Root>
-          </ToolbarFlex>
+          </Flex>
           <table role="grid">
             <thead aria-hidden>
               <tr aria-rowindex={0}>
@@ -1077,7 +1006,7 @@ const DatePickerCalendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                         disabled={minDate.compare(date) > 0 || date.compare(maxDate) > 0}
                       />
                     ) : (
-                      <Cell key={index + 1} aria-colindex={index + 1} />
+                      <Box tag="td" data-strapi-datepicker-cell="" key={index + 1} aria-colindex={index + 1} />
                     ),
                   )}
                 </tr>
@@ -1129,21 +1058,6 @@ const makeGetDatesInWeek = (from: CalendarDate, locale: string) => (weekIndex: n
   return dates;
 };
 
-const ToolbarFlex = styled<FlexComponent>(Flex)`
-  div[role='combobox'] {
-    border: 1px solid transparent;
-    background: transparent;
-    font-weight: ${(props) => props.theme.fontWeights.bold};
-
-    svg {
-      fill: ${({ theme }) => theme.colors.neutral500};
-    }
-
-    &:hover {
-      background-color: ${({ theme }) => theme.colors.neutral100};
-    }
-  }
-`;
 
 /* -------------------------------------------------------------------------------------------------
  * DatePickerHeaderCell
@@ -1156,19 +1070,22 @@ interface HeaderCellProps extends Omit<BoxProps<'td'>, 'children'> {
 const DatePickerHeaderCell = React.forwardRef<HTMLTableCellElement, HeaderCellProps>(
   ({ children, ...props }, forwardedRef) => {
     return (
-      <Th tag="th" role="gridcell" ref={forwardedRef} {...props} height="2.4rem" width="3.2rem">
+      <Box
+        tag="th"
+        role="gridcell"
+        ref={forwardedRef}
+        data-strapi-datepicker-header-cell=""
+        {...props}
+        height="2.4rem"
+        width="3.2rem"
+      >
         <Typography variant="pi" fontWeight="bold" color="neutral800">
           {children.slice(0, 2)}
         </Typography>
-      </Th>
+      </Box>
     );
   },
 );
-
-const Th = styled<BoxComponent<'th' | 'td'>>(Box)`
-  border-radius: ${({ theme }) => theme.borderRadius};
-  text-transform: capitalize;
-`;
 
 /* -------------------------------------------------------------------------------------------------
  *  DatePickerCalendarCell
@@ -1203,16 +1120,8 @@ const DatePickerCalendarCell = React.forwardRef<DatePickerCalendarCellElement, C
     const endDate = endOfMonth(startDate);
     const isOutsideVisibleRange = date.compare(startDate) < 0 || date.compare(endDate) > 0;
 
-    let textColor: keyof DefaultTheme['colors'] = 'neutral900';
-
-    if (isSelected) {
-      textColor = 'primary600';
-    } else if (isOutsideVisibleRange) {
-      textColor = 'neutral600';
-    }
-
     return (
-      <Cell
+      <Box
         tag="td"
         role="gridcell"
         ref={forwardedRef}
@@ -1221,8 +1130,9 @@ const DatePickerCalendarCell = React.forwardRef<DatePickerCalendarCellElement, C
         hasRadius
         aria-label={label}
         tabIndex={isSelected ? 0 : -1}
-        background={isSelected ? 'primary100' : 'neutral0'}
         cursor="pointer"
+        data-strapi-datepicker-cell=""
+        data-outside-month={isOutsideVisibleRange ? '' : undefined}
         onPointerDown={composeEventHandlers(props.onPointerDown, (event) => {
           event.preventDefault();
           onCalendarDateChange(date);
@@ -1232,31 +1142,11 @@ const DatePickerCalendarCell = React.forwardRef<DatePickerCalendarCellElement, C
         })}
         aria-disabled={disabled}
       >
-        <Typography variant="pi" textColor={textColor}>
-          {formattedDate}
-        </Typography>
-      </Cell>
+        <Typography variant="pi">{formattedDate}</Typography>
+      </Box>
     );
   },
 );
-
-const Cell = styled<BoxComponent<'th' | 'td'>>(Box)`
-  text-align: center;
-  padding: 0.7rem;
-  // Trick to prevent the outline from overflowing because of the general outline-offset
-  outline-offset: -2px !important;
-  &[aria-disabled='true'] {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-
-  &[aria-disabled='false'] {
-    &:hover {
-      background: ${({ theme }) => theme.colors.primary100};
-      color: ${({ theme }) => theme.colors.primary600};
-    }
-  }
-`;
 
 const convertUTCDateToCalendarDate = (date: Date): CalendarDate => {
   const utcDateString = date.toISOString();

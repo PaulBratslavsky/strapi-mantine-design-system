@@ -1,24 +1,46 @@
+/**
+ * Dialog — drop-in port off styled-components.
+ *
+ * Substrate is still Radix AlertDialog (Root / Trigger / Portal / Overlay /
+ * Content / Title / Description / Cancel / Action). The four styled
+ * wrappers are gone:
+ *
+ *   - Overlay (fixed backdrop, neutral800 at 20% alpha, fade-in animation)
+ *     → CSS rules on `[data-strapi-dialog-overlay]` reading semantic
+ *       tokens (`--strapi-dialog-overlay-*`).
+ *
+ *   - ContentImpl (centered modal panel, bg + radius + shadow + pop-in/out
+ *     animations) → `[data-strapi-dialog-content]` rules driven by
+ *     `--strapi-dialog-*` semantic tokens.
+ *
+ *   - Title (centered heading with bottom border) →
+ *     `[data-strapi-dialog-title]` rules.
+ *
+ *   - Foot (footer with top border) → `[data-strapi-dialog-footer]` rules.
+ *
+ * Radix's per-state attrs (`data-state='open|closed'`) drive the
+ * pop-in/pop-out animations from CSS. Themes re-skin the modal surface,
+ * the backdrop tint/opacity, or the panel border colors independently
+ * by overriding the dedicated tokens — no need to rebrand neutral0/800.
+ */
 import * as React from 'react';
 
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
-import { styled } from 'styled-components';
 
-import { setOpacity } from '../../helpers/setOpacity';
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
-import { Typography, TypographyComponent, TypographyProps } from '../../primitives/Typography';
-import { ANIMATIONS } from '../../styles/motion';
+import { Flex, FlexProps } from '../../primitives/Flex';
+import { Typography, TypographyProps } from '../../primitives/Typography';
 
-/* -------------------------------------------------------------------------------------------------
- * Root
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Root                                                                       */
+/* -------------------------------------------------------------------------- */
 
 interface Props extends AlertDialog.AlertDialogProps {}
 
 const Root = AlertDialog.Root;
 
-/* -------------------------------------------------------------------------------------------------
- * Trigger
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Trigger                                                                    */
+/* -------------------------------------------------------------------------- */
 
 type TriggerElement = HTMLButtonElement;
 
@@ -28,9 +50,9 @@ const Trigger = React.forwardRef<TriggerElement, TriggerProps>((props, forwarded
   return <AlertDialog.Trigger {...props} asChild ref={forwardedRef} />;
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Content
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Content (Overlay + Content panel)                                          */
+/* -------------------------------------------------------------------------- */
 
 type ContentElement = HTMLDivElement;
 
@@ -39,63 +61,16 @@ interface ContentProps extends AlertDialog.AlertDialogContentProps {}
 const Content = React.forwardRef<ContentElement, ContentProps>((props, forwardedRef) => {
   return (
     <AlertDialog.Portal>
-      <Overlay>
-        <ContentImpl ref={forwardedRef} {...props} />
-      </Overlay>
+      <AlertDialog.Overlay data-strapi-dialog-overlay="">
+        <AlertDialog.Content data-strapi-dialog-content="" {...props} ref={forwardedRef} />
+      </AlertDialog.Overlay>
     </AlertDialog.Portal>
   );
 });
 
-const Overlay = styled(AlertDialog.Overlay)`
-  background: ${(props) => setOpacity(props.theme.colors.neutral800, 0.2)};
-  position: fixed;
-  inset: 0;
-  z-index: ${(props) => props.theme.zIndices.overlay};
-  will-change: opacity;
-
-  @media (prefers-reduced-motion: no-preference) {
-    animation: ${ANIMATIONS.overlayFadeIn} ${(props) => props.theme.motion.timings['200']}
-      ${(props) => props.theme.motion.easings.authenticMotion};
-  }
-`;
-
-const ContentImpl = styled(AlertDialog.Content)`
-  max-width: 42rem;
-  height: min-content;
-  width: calc(100% - ${({ theme }) => theme.spaces[8]});
-  overflow: hidden;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  border-radius: ${(props) => props.theme.borderRadius};
-  background-color: ${(props) => props.theme.colors.neutral0};
-  box-shadow: ${(props) => props.theme.shadows.popupShadow};
-  z-index: ${(props) => props.theme.zIndices.modal};
-
-  @media (prefers-reduced-motion: no-preference) {
-    &[data-state='open'] {
-      animation-duration: ${(props) => props.theme.motion.timings['200']};
-      animation-timing-function: ${(props) => props.theme.motion.easings.authenticMotion};
-      animation-name: ${ANIMATIONS.modalPopIn};
-    }
-
-    &[data-state='closed'] {
-      animation-duration: ${(props) => props.theme.motion.timings['120']};
-      animation-timing-function: ${(props) => props.theme.motion.easings.easeOutQuad};
-      animation-name: ${ANIMATIONS.modalPopOut};
-    }
-  }
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * Header
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Header (Title)                                                             */
+/* -------------------------------------------------------------------------- */
 
 type HeaderElement = HTMLHeadingElement;
 
@@ -104,31 +79,31 @@ interface HeaderProps extends TypographyProps<'h2'> {}
 const Header = React.forwardRef<HeaderElement, HeaderProps>(({ children, ...restProps }, forwardedRef) => {
   return (
     <AlertDialog.Title asChild>
-      {/* @ts-expect-error fix: Type 'OtherIndividualResponsiveProperty<"color">' is not assignable to type 'string | undefined'.*/}
-      <Title<'h2'> tag="h2" variant="beta" ref={forwardedRef} padding={6} fontWeight="bold" {...restProps}>
+      <Typography<'h2'>
+        tag="h2"
+        variant="beta"
+        ref={forwardedRef}
+        padding={6}
+        fontWeight="bold"
+        data-strapi-dialog-title=""
+        {...restProps}
+      >
         {children}
-      </Title>
+      </Typography>
     </AlertDialog.Title>
   );
 });
 
-const Title = styled<TypographyComponent<'h2'>>(Typography)`
-  display: flex;
-  justify-content: center;
-  border-bottom: solid 1px ${(props) => props.theme.colors.neutral150};
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * Body
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Body                                                                       */
+/* -------------------------------------------------------------------------- */
 
 type BodyElement = HTMLDivElement;
 
 interface BodyProps extends Omit<FlexProps<'div'>, 'tag'> {
   /**
-   * @description optional icon to display, only rendered if
-   * children is a string. If provided, it is given the height
-   * & width of 24px.
+   * Optional icon to display, only rendered if children is a string.
+   * If provided, it is given the height & width of 24px.
    */
   icon?: React.ReactElement;
 }
@@ -162,9 +137,9 @@ const Body = React.forwardRef<BodyElement, BodyProps>(({ children, icon, ...rest
   );
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Description
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Description                                                                */
+/* -------------------------------------------------------------------------- */
 
 type DescriptionElement = HTMLParagraphElement;
 
@@ -173,31 +148,37 @@ interface DescriptionProps extends Omit<TypographyProps<'p'>, 'tag'> {}
 const Description = React.forwardRef<DescriptionElement, DescriptionProps>((props, forwardedRef) => {
   return (
     <AlertDialog.Description asChild>
-      <Typography ref={forwardedRef} variant="omega" {...props} tag="p"></Typography>
+      <Typography ref={forwardedRef} variant="omega" {...props} tag="p" />
     </AlertDialog.Description>
   );
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Footer
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Footer                                                                     */
+/* -------------------------------------------------------------------------- */
 
 type FooterElement = HTMLDivElement;
 
 interface FooterProps extends Omit<FlexProps<'footer'>, 'tag'> {}
 
 const Footer = React.forwardRef<FooterElement, FooterProps>((props, forwardedRef) => {
-  return <Foot ref={forwardedRef} gap={2} padding={4} justifyContent="space-between" {...props} tag="footer" />;
+  return (
+    <Flex
+      ref={forwardedRef}
+      gap={2}
+      padding={4}
+      justifyContent="space-between"
+      flex={1}
+      data-strapi-dialog-footer=""
+      {...props}
+      tag="footer"
+    />
+  );
 });
 
-const Foot = styled<FlexComponent<'footer'>>(Flex)`
-  border-top: solid 1px ${(props) => props.theme.colors.neutral150};
-  flex: 1;
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * Cancel
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Cancel                                                                     */
+/* -------------------------------------------------------------------------- */
 
 type CancelElement = HTMLButtonElement;
 
@@ -207,9 +188,9 @@ const Cancel = React.forwardRef<CancelElement, CancelProps>((props, forwardedRef
   return <AlertDialog.Cancel {...props} asChild ref={forwardedRef} />;
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Action
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* Action                                                                     */
+/* -------------------------------------------------------------------------- */
 
 type ActionElement = HTMLButtonElement;
 

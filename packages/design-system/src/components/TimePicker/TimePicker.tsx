@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { Clock } from '@strapi/icons';
-import { styled } from 'styled-components';
 
 import { useControllableState } from '../../hooks/useControllableState';
 import { useDateFormatter } from '../../hooks/useDateFormatter';
@@ -44,10 +43,6 @@ export interface TimePickerProps
   value?: string;
   defaultValue?: string;
 }
-
-const TimePickerCombobox = styled(Combobox)`
-  min-width: ${({ onClear }) => (onClear ? '160px' : '130px')};
-`;
 
 export const TimePicker = React.forwardRef<ComboboxInputElement, TimePickerProps>(
   ({ step = 15, value: valueProp, defaultValue, onChange, ...restProps }, forwardedRef) => {
@@ -140,7 +135,7 @@ export const TimePicker = React.forwardRef<ComboboxInputElement, TimePickerProps
     const pattern = `\\d{2}${escapedSeparator}\\d{2}`;
 
     return (
-      <TimePickerCombobox
+      <Combobox
         {...restProps}
         ref={forwardedRef}
         value={value}
@@ -155,13 +150,15 @@ export const TimePicker = React.forwardRef<ComboboxInputElement, TimePickerProps
         textValue={textValue}
         onTextValueChange={handleTextValueChange}
         onBlur={handleBlur}
+        data-strapi-timepicker=""
+        data-has-clear={restProps.onClear ? '' : undefined}
       >
         {timeOptions.map((time) => (
           <ComboboxOption key={time} value={time}>
             {time}
           </ComboboxOption>
         ))}
-      </TimePickerCombobox>
+      </Combobox>
     );
   },
 );

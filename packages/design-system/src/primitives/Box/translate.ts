@@ -89,7 +89,12 @@ export const resolveSpacing: Resolver = (v) => {
 export const resolveColor: Resolver = (v) => {
   if (v == null) return undefined;
   if (typeof v !== 'string') return String(v);
-  if (/^[a-zA-Z][a-zA-Z0-9]*$/.test(v)) return `var(--strapi-color-${v})`;
+  // Strapi token names are <category><digits>: primary600, neutral800, danger100,
+  // buttonNeutral0, etc. Only those should resolve to a CSS variable. Anything
+  // else (CSS keywords like 'currentcolor' / 'inherit' / 'transparent', named
+  // colors like 'red', raw hex / rgb / hsl / var() / color-mix(), etc.) is
+  // passed through unchanged.
+  if (/^[a-zA-Z]+\d+$/.test(v)) return `var(--strapi-color-${v})`;
   return v;
 };
 

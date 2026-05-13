@@ -34,9 +34,17 @@ export type LinkProps<C extends React.ElementType = 'a'> = BaseLinkProps<C> & {
   endIcon?: React.ReactNode;
   /** @default false */
   isExternal?: boolean;
-  /** @default primary600 */
+  /**
+   * Override the resting link color. When unset, the CSS variable
+   * `--strapi-link-color` (defined in `componentPolish.css`, default
+   * primary600) is used — letting themes re-skin links without
+   * touching every consumer.
+   */
   color?: keyof DefaultTheme['colors'];
-  /** @default primary700 */
+  /**
+   * Override the hover/active link color. When unset, the CSS variable
+   * `--strapi-link-color-active` (default primary700) is used.
+   */
   activeColor?: keyof DefaultTheme['colors'];
 };
 
@@ -64,24 +72,35 @@ const MantineLink = React.forwardRef<HTMLAnchorElement, LinkProps>(
       startIcon,
       endIcon,
       isExternal = false,
-      color = 'primary600',
-      activeColor = 'primary700',
+      color,
+      activeColor,
       tag,
       style,
       ...rest
     },
     ref,
   ) => {
-    const effectiveColor = disabled ? 'neutral600' : color;
     const componentProp = tag as React.ElementType | undefined;
 
-    // CSS custom properties drive hover/active colors. Kept on the element so
-    // CSS overrides only need to read `var(--strapi-link-color)` regardless of
-    // which token was passed at render time.
-    const cssVars: React.CSSProperties & Record<string, string> = {
-      '--strapi-link-color': `var(--strapi-color-${effectiveColor})`,
-      '--strapi-link-active-color': `var(--strapi-color-${activeColor})`,
-    };
+    /**
+     * Per-instance color overrides — only emitted as inline CSS variables
+     * when the consumer explicitly passes `color` / `activeColor`. The
+     * defaults live in `componentPolish.css` as `--strapi-link-color`,
+     * `--strapi-link-color-active`, and `--strapi-link-color-disabled`,
+     * which themes can re-skin at @layer app without rebranding the
+     * primary scale.
+     *
+     * Disabled state is signaled via `data-disabled` and the CSS rule
+     * switches the effective color — no inline override needed.
+     */
+    const cssVars: Record<string, string> = {};
+    if (color !== undefined) {
+      cssVars['--strapi-link-color'] = `var(--strapi-color-${color})`;
+    }
+    if (activeColor !== undefined) {
+      cssVars['--strapi-link-color-active'] = `var(--strapi-color-${activeColor})`;
+    }
+    const hasInlineOverrides = Object.keys(cssVars).length > 0;
 
     return (
       <MantineAnchorPermissive
@@ -96,7 +115,7 @@ const MantineLink = React.forwardRef<HTMLAnchorElement, LinkProps>(
         data-strapi-link=""
         data-disabled={disabled || undefined}
         data-external={isExternal || undefined}
-        style={{ ...cssVars, ...style }}
+        style={hasInlineOverrides ? { ...(cssVars as React.CSSProperties), ...style } : style}
         {...(rest as Record<string, unknown>)}
       >
         {startIcon}

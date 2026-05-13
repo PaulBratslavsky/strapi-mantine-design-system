@@ -30,8 +30,6 @@ import { Button, ButtonProps } from '../Button';
 import { IconButton } from '../IconButton';
 import { Link, LinkProps } from '../Link';
 
-import { getIconColor, getTextColor } from './utils';
-
 /* -------------------------------------------------------------------------- */
 /* MenuRoot                                                                   */
 /* -------------------------------------------------------------------------- */
@@ -182,16 +180,16 @@ const MenuItem = ({
   endIcon,
   isExternal,
   variant = 'default',
+  // `color` flows from BoxProps but is now driven by CSS rules per
+  // `data-variant` + `data-disabled`. Strip it so it doesn't leak through
+  // the spread and clash with Link's narrower color-token type.
+  color: _ignoredColor,
   ...props
 }: ItemProps) => {
   return (
     <DropdownMenu.Item asChild onSelect={onSelect} disabled={disabled}>
       {isLink || isExternal ? (
         <Link
-          // getTextColor returns one of Strapi's color-token strings; cast to
-          // Link's narrow `keyof DefaultTheme['colors']` shape. (utils.ts
-          // returns plain `string` so it can stay styled-components-free.)
-          color={getTextColor(variant, disabled) as React.ComponentProps<typeof Link>['color']}
           startIcon={startIcon}
           endIcon={endIcon}
           {...props}
@@ -204,9 +202,16 @@ const MenuItem = ({
           {props.children}
         </Link>
       ) : (
+        /**
+         * Option layout — color is NOT set via Box props. Default text/icon
+         * colors per `data-variant` + `data-disabled` are driven by CSS rules
+         * on `[data-strapi-menu-option]` in `componentPolish.css`, reading
+         * `--strapi-menu-option-*` semantic tokens. A theme can re-skin menus
+         * by overriding those tokens alone — no need to rebrand the primary
+         * or danger scales.
+         */
         <Flex
           cursor="pointer"
-          color={getTextColor(variant, disabled) as React.ComponentProps<typeof Flex>['color']}
           background="transparent"
           borderStyle="none"
           gap={2}
@@ -216,15 +221,17 @@ const MenuItem = ({
           {...props}
         >
           {startIcon && (
-            <Flex tag="span" color={getIconColor(variant, disabled)} aria-hidden>
+            <Flex tag="span" data-strapi-menu-option-icon="" aria-hidden>
               {startIcon}
             </Flex>
           )}
 
-          <Typography grow={1}>{props.children}</Typography>
+          <Typography grow={1} data-strapi-menu-option-text="">
+            {props.children}
+          </Typography>
 
           {endIcon && (
-            <Flex tag="span" color={getIconColor(variant, disabled)} aria-hidden>
+            <Flex tag="span" data-strapi-menu-option-icon="" aria-hidden>
               {endIcon}
             </Flex>
           )}

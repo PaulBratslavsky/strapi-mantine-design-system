@@ -1,37 +1,19 @@
+/**
+ * TFooter — drop-in port off styled-components.
+ *
+ * All color/layout (button surface, icon chip, typography color, full-
+ * width block button, rounded bottom corners, icon-circle sizing, SVG
+ * fill) moved to `[data-strapi-tfooter]` and `[data-strapi-tfooter-icon]`
+ * rules in `componentPolish.css`. Those rules read DEDICATED semantic
+ * tokens (e.g. --strapi-tfooter-bg) so a theme can re-skin the footer
+ * surface without rebranding primary100/200/600 everywhere.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, BoxComponent, BoxProps } from '../../primitives/Box';
+import { Box, BoxProps } from '../../primitives/Box';
 import { Flex } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
 import { Divider } from '../Divider';
-
-const IconBox = styled<BoxComponent>(Box)`
-  height: 2.4rem;
-  width: 2.4rem;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  svg {
-    height: 1rem;
-    width: 1rem;
-  }
-
-  svg path {
-    fill: ${({ theme }) => theme.colors.primary600};
-  }
-`;
-
-// TODO: remove when the reset css button is merged
-const ButtonBox = styled<BoxComponent<'button'>>(Box)`
-  border-radius: 0 0 ${({ theme }) => theme.borderRadius} ${({ theme }) => theme.borderRadius};
-  display: block;
-  width: 100%;
-  border: none;
-`;
 
 export interface TFooterProps extends BoxProps<'button'> {
   children: React.ReactNode;
@@ -42,18 +24,23 @@ export const TFooter = ({ children, icon, ...props }: TFooterProps) => {
   return (
     <div>
       <Divider />
-      <ButtonBox tag="button" background="primary100" padding={5} {...props}>
+      <Box tag="button" padding={5} data-strapi-tfooter="" {...props}>
         <Flex>
-          <IconBox aria-hidden background="primary200">
+          <Flex
+            aria-hidden
+            justifyContent="center"
+            alignItems="center"
+            data-strapi-tfooter-icon=""
+          >
             {icon}
-          </IconBox>
+          </Flex>
           <Box paddingLeft={3}>
-            <Typography variant="pi" fontWeight="bold" textColor="primary600">
+            <Typography variant="pi" fontWeight="bold" data-strapi-tfooter-label="">
               {children}
             </Typography>
           </Box>
         </Flex>
-      </ButtonBox>
+      </Box>
     </div>
   );
 };

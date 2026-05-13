@@ -1,13 +1,17 @@
+/**
+ * Thead — drop-in port off styled-components.
+ *
+ * Only styled rule was a bottom border. Moved to `[data-strapi-thead]` in
+ * `componentPolish.css`.
+ */
 import * as React from 'react';
-
-import { styled } from 'styled-components';
 
 import { RawThead, RawTheadProps } from '../RawTable/RawThead';
 
-const TheadWrapper = styled(RawThead)`
-  border-bottom: 1px solid ${({ theme }) => theme.colors.neutral150};
-`;
-
 export const Thead = ({ children, ...props }: RawTheadProps) => {
-  return <TheadWrapper {...props}>{children}</TheadWrapper>;
+  return (
+    <RawThead data-strapi-thead="" {...props}>
+      {children}
+    </RawThead>
+  );
 };

@@ -2,9 +2,12 @@
  * SkipToContent — drop-in port off styled-components.
  *
  * Standard a11y "skip to main content" link. Hidden off-screen by default
- * (left/top: -100%); on focus, jumps into the visible area. The focus
- * styling + text-decoration removal live in `componentPolish.css`
- * keyed on `[data-strapi-skip-to-content]`.
+ * (left/top: -100%); on focus, jumps into the visible area.
+ *
+ * Surface color, text color, focus styling, and text-decoration live in
+ * `componentPolish.css` keyed on `[data-strapi-skip-to-content]`. The
+ * rules read dedicated semantic tokens (--strapi-skip-to-content-*) so
+ * the surface can be re-themed without rebranding the primary scale.
  */
 import { Box } from '../../primitives/Box';
 
@@ -17,8 +20,6 @@ export const SkipToContent = ({ children }: SkipToContentProps) => {
     <Box
       tag="a"
       href="#main-content"
-      background="primary600"
-      color="neutral0"
       left="-100%"
       padding={3}
       position="absolute"

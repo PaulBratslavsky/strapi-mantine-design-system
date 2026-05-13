@@ -1,20 +1,19 @@
+/**
+ * SubNavLinkSection — drop-in port off styled-components.
+ *
+ * Only styled rule was on an internal `button` element — reset border /
+ * padding / background, with flex alignment. Moved to
+ * `[data-strapi-subnav-link-section-button]` CSS rule.
+ */
 import * as React from 'react';
 
 import { CaretDown } from '@strapi/icons';
-import { styled } from 'styled-components';
 
 import { useId } from '../../hooks/useId';
 import { Box } from '../../primitives/Box';
 import { Flex } from '../../primitives/Flex';
 import { Typography } from '../../primitives/Typography';
 
-const SubNavLinkSectionButton = styled.button`
-  border: none;
-  padding: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-`;
 export interface SubNavLinkSectionProps {
   children: React.ReactNode;
   id?: string;
@@ -33,7 +32,12 @@ export const SubNavLinkSection = ({ label, children, id }: SubNavLinkSectionProp
     <Box>
       <Box paddingLeft={7} paddingTop={2} paddingBottom={2} paddingRight={4}>
         <Flex justifyContent="space-between">
-          <SubNavLinkSectionButton onClick={handleClick} aria-expanded={isOpen} aria-controls={listId}>
+          <button
+            onClick={handleClick}
+            aria-expanded={isOpen}
+            aria-controls={listId}
+            data-strapi-subnav-link-section-button=""
+          >
             <CaretDown
               width="1.2rem"
               height="1.2rem"
@@ -46,7 +50,7 @@ export const SubNavLinkSection = ({ label, children, id }: SubNavLinkSectionProp
                 {label}
               </Typography>
             </Box>
-          </SubNavLinkSectionButton>
+          </button>
         </Flex>
       </Box>
       {isOpen && (

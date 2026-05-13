@@ -1,20 +1,18 @@
+/**
+ * SubNavSection — drop-in port off styled-components.
+ *
+ * Only styled rule sized + colored the chevron `svg` next to the section
+ * label. Moved to `[data-strapi-subnav-section] > svg` rule in
+ * componentPolish.css.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
 import { useId } from '../../hooks/useId';
-import { Box, BoxComponent } from '../../primitives/Box';
+import { Box } from '../../primitives/Box';
 import { Flex } from '../../primitives/Flex';
 import { Badge } from '../Badge';
 
 import { SubNavSectionLabel } from './SubNavSectionLabel';
-
-const SubNavSectionWrapper = styled<BoxComponent>(Box)`
-  & > svg {
-    height: 0.4rem;
-    fill: ${({ theme }) => theme.colors.neutral500};
-  }
-`;
 
 export interface SubNavSectionProps {
   badgeLabel?: string;
@@ -34,7 +32,7 @@ export const SubNavSection = ({ collapsable = false, label, badgeLabel, children
 
   return (
     <Flex direction="column" alignItems="stretch" gap={1}>
-      <SubNavSectionWrapper paddingLeft={6} paddingTop={2} paddingBottom={2} paddingRight={4}>
+      <Box paddingLeft={6} paddingTop={2} paddingBottom={2} paddingRight={4} data-strapi-subnav-section="">
         <Box position="relative" paddingRight={badgeLabel ? 6 : 0}>
           <SubNavSectionLabel
             onClick={handleClick}
@@ -56,7 +54,7 @@ export const SubNavSection = ({ collapsable = false, label, badgeLabel, children
             </Badge>
           )}
         </Box>
-      </SubNavSectionWrapper>
+      </Box>
       {(!collapsable || isOpen) && (
         <ol id={listId}>
           {React.Children.map(children, (child, index) => {

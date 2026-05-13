@@ -2,7 +2,6 @@ import * as React from 'react';
 
 import { Search } from '@strapi/icons';
 import { usePrev } from '@strapi/ui-primitives';
-import { styled } from 'styled-components';
 
 import { KeyboardKeys } from '../../helpers/keyboardKeys';
 import { useId } from '../../hooks/useId';
@@ -12,11 +11,6 @@ import { Typography, TypographyProps } from '../../primitives/Typography';
 import { Divider } from '../Divider';
 import { IconButton } from '../IconButton';
 import { Searchbar, SearchbarProps, SearchForm } from '../Searchbar';
-
-const CustomDivider = styled(Divider)`
-  width: 2.4rem;
-  background-color: ${({ theme }) => theme.colors.neutral200};
-`;
 
 export interface SubNavHeaderProps
   extends Pick<TypographyProps<'h2'>, 'tag'>,
@@ -96,7 +90,7 @@ export const SubNavHeader = ({
           </Searchbar>
         </SearchForm>
         <Box paddingLeft={2} paddingTop={4}>
-          <CustomDivider />
+          <Divider width="2.4rem" background="neutral200" />
         </Box>
       </Box>
     );
@@ -115,7 +109,7 @@ export const SubNavHeader = ({
         )}
       </Flex>
       <Box paddingTop={4}>
-        <CustomDivider />
+        <Divider width="2.4rem" background="neutral200" />
       </Box>
     </Flex>
   );

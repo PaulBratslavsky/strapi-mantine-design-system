@@ -1,32 +1,48 @@
+/**
+ * SimpleMenu (compound Menu parts) — drop-in port off styled-components.
+ *
+ * Behavior is still Radix DropdownMenu (Root/Trigger/Portal/Content/Item/
+ * Separator/Label/Sub*). All styled-components wrappers replaced with
+ * `data-strapi-menu-*` data hooks + CSS rules in `componentPolish.css`:
+ *
+ *   [data-strapi-menu-viewport]            scrollbar hiding + z-index
+ *   [data-strapi-menu-content]             slide-down/up animations
+ *   [data-strapi-menu-option][data-variant] common option styling
+ *   [data-strapi-menu-option][data-link]    link-specific overrides
+ *   [data-strapi-menu-separator]           negative margins to bleed into padding
+ *   [data-strapi-menu-label]               sigma typography + padding
+ *   [data-strapi-menu-subtrigger]          submenu open-state bg
+ *
+ * Items reflect their variant (default | danger) and disabled state via
+ * the data attributes; Radix's `data-state` / `data-highlighted` attrs
+ * carry the open/highlighted states the CSS targets.
+ */
 import * as React from 'react';
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { CaretDown, ChevronRight } from '@strapi/icons';
-import { styled, css, type DefaultTheme } from 'styled-components';
 
-import { extractStyleFromTheme } from '../../helpers/theme';
 import { Box, BoxProps } from '../../primitives/Box';
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
-import { Typography, TypographyComponent, TypographyProps } from '../../primitives/Typography';
-import { ANIMATIONS } from '../../styles/motion';
+import { Flex, FlexProps } from '../../primitives/Flex';
+import { Typography, TypographyProps } from '../../primitives/Typography';
 import { BaseLink } from '../BaseLink';
 import { Button, ButtonProps } from '../Button';
 import { IconButton } from '../IconButton';
 import { Link, LinkProps } from '../Link';
 
-import { getIconColor, getTextColor, getBackgroundColorHover } from './utils';
+import { getIconColor, getTextColor } from './utils';
 
-/* -------------------------------------------------------------------------------------------------
- * MenuRoot
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuRoot                                                                   */
+/* -------------------------------------------------------------------------- */
 
 interface RootProps extends DropdownMenu.DropdownMenuProps {}
 
 const MenuRoot = DropdownMenu.Root;
 
-/* -------------------------------------------------------------------------------------------------
- * MenuTrigger
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuTrigger                                                                */
+/* -------------------------------------------------------------------------- */
 
 type TriggerPropsBase = Omit<ButtonProps, 'tag'> & {
   endIcon?: React.ReactNode;
@@ -47,10 +63,6 @@ type TriggerProps = TriggerPropsWithButton | TriggerPropsWithIconButton;
 
 const MenuTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
   ({ label, endIcon = <CaretDown width="1.2rem" height="1.2rem" aria-hidden />, tag = Button, icon, ...rest }, ref) => {
-    // ref is forwarded separately rather than spread through ButtonProps —
-    // Phase 3 dropped `ref` from ButtonProps to align with React.forwardRef's
-    // typing convention. Passing ref as a prop at the JSX site works because
-    // both <Button> and <IconButton> are forwardRef components.
     const props: ButtonProps = {
       ...rest,
       type: 'button',
@@ -70,9 +82,9 @@ const MenuTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
   },
 );
 
-/* -------------------------------------------------------------------------------------------------
- * MenuContent
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuContent                                                                */
+/* -------------------------------------------------------------------------- */
 
 type ContentProps = FlexProps<'div'> &
   Pick<DropdownMenu.DropdownMenuContentProps, 'onCloseAutoFocus'> & {
@@ -89,8 +101,15 @@ const MenuContent = React.forwardRef<HTMLDivElement, ContentProps>(
 
     return (
       <DropdownMenu.Portal>
-        <DropdownMenuContent align={align} side={side} loop onCloseAutoFocus={onCloseAutoFocus} asChild>
-          <Viewport
+        <DropdownMenu.Content
+          align={align}
+          side={side}
+          loop
+          onCloseAutoFocus={onCloseAutoFocus}
+          asChild
+          data-strapi-menu-content=""
+        >
+          <Flex
             ref={ref}
             direction="column"
             borderColor="neutral150"
@@ -104,49 +123,22 @@ const MenuContent = React.forwardRef<HTMLDivElement, ContentProps>(
             alignItems="flex-start"
             position="relative"
             overflow="auto"
+            data-strapi-menu-viewport=""
             {...props}
           >
             {children}
             <Box id={intersectionId} width="100%" height="1px" />
-          </Viewport>
-        </DropdownMenuContent>
+          </Flex>
+        </DropdownMenu.Content>
       </DropdownMenu.Portal>
     );
   },
 );
 
-const Viewport = styled<FlexComponent>(Flex)`
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  z-index: ${(props) => props.theme.zIndices.popover};
+/* -------------------------------------------------------------------------- */
+/* MenuItem                                                                   */
+/* -------------------------------------------------------------------------- */
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-const DropdownMenuContent = styled(DropdownMenu.Content)`
-  @media (prefers-reduced-motion: no-preference) {
-    animation-duration: ${(props) => props.theme.motion.timings['200']};
-
-    &[data-state='open'] {
-      animation-timing-function: ${(props) => props.theme.motion.easings.authenticMotion};
-
-      &[data-side='top'] {
-        animation-name: ${ANIMATIONS.slideUpIn};
-      }
-
-      &[data-side='bottom'] {
-        animation-name: ${ANIMATIONS.slideDownIn};
-      }
-    }
-  }
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * MenuItem
- * -----------------------------------------------------------------------------------------------*/
 export type ItemVariant = 'danger' | 'default';
 
 interface ItemSharedProps extends Pick<DropdownMenu.MenuItemProps, 'disabled' | 'onSelect'> {
@@ -195,24 +187,32 @@ const MenuItem = ({
   return (
     <DropdownMenu.Item asChild onSelect={onSelect} disabled={disabled}>
       {isLink || isExternal ? (
-        <OptionLink
-          color={getTextColor(variant, disabled)}
+        <Link
+          // getTextColor returns one of Strapi's color-token strings; cast to
+          // Link's narrow `keyof DefaultTheme['colors']` shape. (utils.ts
+          // returns plain `string` so it can stay styled-components-free.)
+          color={getTextColor(variant, disabled) as React.ComponentProps<typeof Link>['color']}
           startIcon={startIcon}
           endIcon={endIcon}
           {...props}
           isExternal={isExternal ?? false}
-          $variant={variant}
+          data-strapi-menu-option=""
+          data-strapi-menu-option-link=""
+          data-variant={variant}
+          data-disabled={disabled ? '' : undefined}
         >
           {props.children}
-        </OptionLink>
+        </Link>
       ) : (
-        <OptionButton
+        <Flex
           cursor="pointer"
-          color={getTextColor(variant, disabled)}
+          color={getTextColor(variant, disabled) as React.ComponentProps<typeof Flex>['color']}
           background="transparent"
           borderStyle="none"
           gap={2}
-          $variant={variant}
+          data-strapi-menu-option=""
+          data-variant={variant}
+          data-disabled={disabled ? '' : undefined}
           {...props}
         >
           {startIcon && (
@@ -228,154 +228,84 @@ const MenuItem = ({
               {endIcon}
             </Flex>
           )}
-        </OptionButton>
+        </Flex>
       )}
     </DropdownMenu.Item>
   );
 };
 
-const getOptionStyle = ({ theme, $variant }: { theme: DefaultTheme; $variant: ItemVariant }) => css`
-  text-align: left;
-  width: 100%;
-  border-radius: ${theme.borderRadius};
-  padding: ${theme.spaces[2]} ${theme.spaces[4]};
-
-  &[aria-disabled='true'] {
-    cursor: not-allowed;
-  }
-
-  &[data-highlighted] {
-    background-color: ${theme.colors[getBackgroundColorHover($variant)]};
-  }
-
-  &:focus-visible {
-    outline: none;
-
-    &:after {
-      content: none;
-    }
-  }
-
-  color: ${theme.colors[getTextColor($variant, false)]};
-`;
-
-const OptionButton = styled<FlexComponent<'button' | 'a'>>(Flex)<{ $variant: ItemVariant }>`
-  ${({ theme, $variant }) => getOptionStyle({ theme, $variant })}
-`;
-
-const OptionLink = styled(Link)<{ $variant: ItemVariant }>`
-  /* We include this here again because typically when people use OptionLink they provide an as prop which cancels the Box props */
-  color: ${({ theme, color }) => extractStyleFromTheme(theme.colors, color, undefined)};
-  text-decoration: none;
-
-  &:hover {
-    color: unset;
-
-    > svg {
-      path {
-        fill: ${({ theme, $variant }) => theme.colors[getIconColor($variant, false)]};
-      }
-    }
-  }
-  > svg {
-    path {
-      fill: ${({ theme, $variant }) => theme.colors[getIconColor($variant, false)]};
-    }
-  }
-  &[aria-disabled='true'] {
-    pointer-events: none;
-
-    > svg {
-      path {
-        fill: ${({ theme, $variant }) => theme.colors[getIconColor($variant, true)]};
-      }
-    }
-  }
-
-  ${({ theme, $variant }) => getOptionStyle({ theme, $variant })}
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * MenuSeparator
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuSeparator                                                              */
+/* -------------------------------------------------------------------------- */
 
 interface SeparatorProps extends DropdownMenu.DropdownMenuSeparatorProps {}
 
-const StyledSeparator = styled(Box)`
-  /* Negative horizontal margin to compensate Menu.Content's padding */
-  margin: ${({ theme }) => theme.spaces[1]} -${({ theme }) => theme.spaces[1]};
-  width: calc(100% + ${({ theme }) => theme.spaces[2]});
-  /* Hide separator if there's nothing above in the menu */
-  &:first-child {
-    display: none;
-  }
-`;
-
 const MenuSeparator = React.forwardRef<HTMLDivElement, SeparatorProps>((props: SeparatorProps, ref) => (
   <DropdownMenu.Separator {...props} asChild>
-    <StyledSeparator height="1px" shrink={0} background="neutral150" ref={ref} />
+    <Box height="1px" shrink={0} background="neutral150" ref={ref} data-strapi-menu-separator="" />
   </DropdownMenu.Separator>
 ));
 
-/* -------------------------------------------------------------------------------------------------
- * MenuLabel
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuLabel                                                                  */
+/* -------------------------------------------------------------------------- */
 
 interface LabelProps extends TypographyProps {}
 
 const MenuLabel = React.forwardRef<HTMLSpanElement, LabelProps>((props, ref) => (
   <DropdownMenu.Label asChild>
-    <StyledLabel ref={ref} variant="sigma" textColor="neutral600" {...props} />
+    <Typography
+      ref={ref}
+      variant="sigma"
+      textColor="neutral600"
+      data-strapi-menu-label=""
+      {...props}
+    />
   </DropdownMenu.Label>
 ));
 
-const StyledLabel = styled<TypographyComponent>(Typography)`
-  padding: ${({ theme }) => theme.spaces[2]} ${({ theme }) => theme.spaces[4]};
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * MenuSubRoot
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuSubRoot                                                                */
+/* -------------------------------------------------------------------------- */
 
 interface SubRootProps extends DropdownMenu.DropdownMenuSubProps {}
 
 const MenuSubRoot = DropdownMenu.Sub;
 
-/* -------------------------------------------------------------------------------------------------
- * MenuSubTrigger
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuSubTrigger                                                             */
+/* -------------------------------------------------------------------------- */
 
 interface SubTriggerProps extends BoxProps<'button'> {}
 
-const MenuSubTrigger = React.forwardRef<HTMLButtonElement, SubTriggerProps>(({ disabled = false, ...props }, ref) => {
-  return (
-    <DropdownMenu.SubTrigger asChild disabled={disabled}>
-      <SubmenuTrigger
-        ref={ref}
-        color="neutral800"
-        tag="button"
-        type="button"
-        background="transparent"
-        borderStyle="none"
-        gap={5}
-        {...props}
-      >
-        <Typography>{props.children}</Typography>
-        <ChevronRight fill="neutral500" height="1.2rem" width="1.2rem" />
-      </SubmenuTrigger>
-    </DropdownMenu.SubTrigger>
-  );
-});
+const MenuSubTrigger = React.forwardRef<HTMLButtonElement, SubTriggerProps>(
+  ({ disabled = false, ...props }, ref) => {
+    return (
+      <DropdownMenu.SubTrigger asChild disabled={disabled}>
+        <Flex
+          ref={ref}
+          color="neutral800"
+          tag="button"
+          type="button"
+          background="transparent"
+          borderStyle="none"
+          gap={5}
+          data-strapi-menu-option=""
+          data-strapi-menu-subtrigger=""
+          data-variant="default"
+          {...props}
+        >
+          <Typography>{props.children}</Typography>
+          <ChevronRight fill="neutral500" height="1.2rem" width="1.2rem" />
+        </Flex>
+      </DropdownMenu.SubTrigger>
+    );
+  },
+);
 
-const SubmenuTrigger = styled<FlexComponent<'button' | 'a'>>(OptionButton)`
-  &[data-state='open'] {
-    background-color: ${({ theme }) => theme.colors.primary100};
-  }
-`;
-
-/* -------------------------------------------------------------------------------------------------
- * MenuSubContent
- * -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------- */
+/* MenuSubContent                                                             */
+/* -------------------------------------------------------------------------- */
 
 interface SubContentProps extends FlexProps<'div'> {}
 
@@ -383,7 +313,7 @@ const MenuSubContent = React.forwardRef<HTMLDivElement, SubContentProps>((props,
   return (
     <DropdownMenu.Portal>
       <DropdownMenu.SubContent sideOffset={8} asChild>
-        <Viewport
+        <Flex
           ref={ref}
           direction="column"
           borderStyle="solid"
@@ -396,6 +326,7 @@ const MenuSubContent = React.forwardRef<HTMLDivElement, SubContentProps>((props,
           padding={1}
           alignItems="flex-start"
           overflow="auto"
+          data-strapi-menu-viewport=""
           {...props}
         />
       </DropdownMenu.SubContent>

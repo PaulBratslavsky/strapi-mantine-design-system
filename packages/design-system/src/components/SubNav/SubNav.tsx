@@ -1,27 +1,25 @@
+/**
+ * SubNav — drop-in port off styled-components.
+ *
+ * Sticky left-column nav (used in Settings, Content Manager, Content-Type
+ * Builder). The styled wrapper around Box set width, background, sticky
+ * positioning, full viewport height, scroll, right border, z-index. All
+ * those rules moved to `[data-strapi-subnav]` in `componentPolish.css`.
+ *
+ * The strapi-experimental admin layers its own breakpoint-specific
+ * overrides on top via `MainSubNav = styled(DSSubNav)\`...\`` — those
+ * still work because our CSS rule is at class-level specificity, so a
+ * consumer styled() wrapper's class beats it via source order.
+ */
 import * as React from 'react';
 
-import { styled } from 'styled-components';
-
-import { Box, BoxComponent, BoxProps } from '../../primitives/Box';
-
-const SUBNAV_WIDTH = `23.2rem`;
+import { Box, BoxProps } from '../../primitives/Box';
 
 interface SubNavProps extends Omit<BoxProps<'nav'>, 'tag'> {}
 
 const SubNav = React.forwardRef<HTMLDivElement, SubNavProps>(({ ...props }, ref) => {
-  return <SubNavWrapper ref={ref} {...props} tag="nav" />;
+  return <Box ref={ref} {...props} tag="nav" data-strapi-subnav="" />;
 });
-
-const SubNavWrapper = styled<BoxComponent<'nav'>>(Box)`
-  width: ${SUBNAV_WIDTH};
-  background: ${({ theme }) => theme.colors.neutral100};
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  border-right: 1px solid ${({ theme }) => theme.colors.neutral200};
-  z-index: 1;
-`;
 
 export { SubNav };
 export type { SubNavProps };

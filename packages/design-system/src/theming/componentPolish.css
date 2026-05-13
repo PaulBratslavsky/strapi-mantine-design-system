@@ -1048,4 +1048,148 @@
       animation: strapi-accordion-slide-up 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
+
+  /* === SubNav — sticky left-column nav with header/section/link parts === */
+  [data-strapi-subnav] {
+    width: 23.2rem;
+    background: var(--strapi-color-neutral100);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--strapi-color-neutral200);
+    z-index: 1;
+  }
+  /* SubNavSection — chevron toggle styling */
+  [data-strapi-subnav-section] > svg {
+    height: 0.4rem;
+    fill: var(--strapi-color-neutral500);
+  }
+  /* SubNavLinkSection — reset button chrome on the section header */
+  [data-strapi-subnav-link-section-button] {
+    border: none;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  /* SubNavLink — flex layout + active-state primary tint + bullet */
+  [data-strapi-subnav-link] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--strapi-color-neutral800);
+  }
+  [data-strapi-subnav-link] svg > * {
+    fill: var(--strapi-color-neutral600);
+  }
+  [data-strapi-subnav-link].active {
+    background-color: var(--strapi-color-primary100);
+    border-right: 2px solid var(--strapi-color-primary600);
+    color: var(--strapi-color-primary700);
+    font-weight: 500;
+  }
+  [data-strapi-subnav-link].active [data-strapi-subnav-bullet] {
+    background-color: var(--strapi-color-primary600);
+  }
+  [data-strapi-subnav-link]:focus-visible {
+    outline-offset: -2px;
+  }
+  [data-strapi-subnav-link-icon] svg {
+    height: 1.6rem;
+    width: 1.6rem;
+  }
+  /* SubNav bullet — small circle indicator next to link label */
+  [data-strapi-subnav-bullet] {
+    width: 0.4rem;
+    height: 0.4rem;
+    background-color: var(--strapi-color-neutral600);
+    border-radius: 50%;
+  }
+  [data-strapi-subnav-bullet][data-active] {
+    background-color: var(--strapi-color-primary600);
+  }
+
+  /* === SimpleMenu — Radix DropdownMenu compound ========================== *
+   * Viewport scrolls; Content animates in; Items reflect default | danger
+   * variant + disabled state; Separator bleeds into the Content padding;
+   * Label is a sigma label with consistent padding.
+   */
+  [data-strapi-menu-viewport] {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    z-index: 500;
+  }
+  [data-strapi-menu-viewport]::-webkit-scrollbar {
+    display: none;
+  }
+  @keyframes strapi-menu-slide-down-in {
+    0%   { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes strapi-menu-slide-up-in {
+    0%   { opacity: 0; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-strapi-menu-content][data-state='open'][data-side='bottom'] {
+      animation: strapi-menu-slide-down-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-strapi-menu-content][data-state='open'][data-side='top'] {
+      animation: strapi-menu-slide-up-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+  /* Common option styling (shared by item buttons + item links) */
+  [data-strapi-menu-option] {
+    text-align: left;
+    width: 100%;
+    border-radius: var(--strapi-radius);
+    padding: var(--strapi-space-2) var(--strapi-space-4);
+  }
+  [data-strapi-menu-option][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+  [data-strapi-menu-option][data-highlighted] {
+    background-color: var(--strapi-color-primary100);
+  }
+  [data-strapi-menu-option][data-variant='danger'][data-highlighted] {
+    background-color: var(--strapi-color-danger100);
+  }
+  [data-strapi-menu-option]:focus-visible {
+    outline: none;
+  }
+  [data-strapi-menu-option]:focus-visible::after {
+    content: none;
+  }
+  /* Link-flavored option — reset text-decoration, color-inheriting hover,
+     icon color matches variant */
+  [data-strapi-menu-option-link] {
+    color: inherit;
+    text-decoration: none;
+  }
+  [data-strapi-menu-option-link]:hover {
+    color: unset;
+  }
+  [data-strapi-menu-option-link][aria-disabled='true'] {
+    pointer-events: none;
+  }
+  /* Submenu trigger — open-state primary tint */
+  [data-strapi-menu-subtrigger][data-state='open'] {
+    background-color: var(--strapi-color-primary100);
+  }
+  /* Separator — bleed margins into Menu.Content's padding (sp1 outside) */
+  [data-strapi-menu-separator] {
+    margin: var(--strapi-space-1) calc(-1 * var(--strapi-space-1));
+    width: calc(100% + var(--strapi-space-2));
+  }
+  [data-strapi-menu-separator]:first-child {
+    display: none;
+  }
+  /* Label — same padding as items for visual rhythm */
+  [data-strapi-menu-label] {
+    padding: var(--strapi-space-2) var(--strapi-space-4);
+  }
 }

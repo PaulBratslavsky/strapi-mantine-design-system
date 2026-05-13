@@ -1,79 +1,81 @@
+/**
+ * Public Typography entry — resolver-aware shell.
+ *
+ *   1. Looks up the resolved implementation via `useDSComponent('Typography')`.
+ *      Consumers can swap implementations per-subtree via <DSProvider>.
+ *   2. The shipped default is `MantineTypography` (registered below).
+ *   3. The legacy styled-components implementation lives in
+ *      `./legacy/LegacyTypography` and can be opted into via the resolver.
+ *
+ * Polymorphic forwardRef shape matches the legacy Typography so existing
+ * `styled<TypographyComponent<X>>(Typography)` wrappers across the DS keep
+ * compiling unchanged.
+ */
 import * as React from 'react';
 
-import { styled, type CSSProperties } from 'styled-components';
-
-import {
-  handleResponsiveValues,
-  type ResponsiveProperty,
-  type ResponsiveThemeProperty,
-} from '../../helpers/handleResponsiveValues';
-import { ellipsis, variant, type TEXT_VARIANTS } from '../../styles/type';
-import { PolymorphicComponentPropsWithRef, PolymorphicRef, PropsToTransientProps } from '../../types';
+import { registerDSComponent, useDSComponent, DEFAULT as RESOLVER_DEFAULT } from '../../resolver';
+import { PolymorphicComponentPropsWithRef, PolymorphicRef } from '../../types';
 import { forwardRef } from '../../utilities/forwardRef';
-import { Box, BoxComponent, BoxProps } from '../Box';
 
-interface TransientTypographyProps {
-  ellipsis?: boolean;
-  textColor?: ResponsiveThemeProperty<'colors', 'color'>;
-  textDecoration?: ResponsiveProperty<CSSProperties['textDecoration']>;
-  variant?: (typeof TEXT_VARIANTS)[number];
+import { MantineTypography, type TypographyProps, type TransientTypographyProps } from './MantineTypography';
+
+/* -------------------------------------------------------------------------- */
+/* Registry augmentation                                                      */
+/* -------------------------------------------------------------------------- */
+
+declare module '../../resolver/types' {
+  interface DSComponentRegistry {
+    Typography: { props: TypographyProps; variants: DSTypographyVariants };
+  }
+  /**
+   * Append-only variant set for `Typography`. Matches the legacy
+   * TEXT_VARIANTS exactly. Consumers can extend via declaration merging.
+   */
+  interface DSTypographyVariants {
+    alpha: true;
+    beta: true;
+    delta: true;
+    epsilon: true;
+    omega: true;
+    pi: true;
+    sigma: true;
+  }
 }
 
-type TypographyProps<C extends React.ElementType = 'span'> = Omit<BoxProps<C>, 'ref'> & TransientTypographyProps;
+/* -------------------------------------------------------------------------- */
+/* Register the shipped default                                               */
+/* -------------------------------------------------------------------------- */
 
-const Typography = forwardRef(
+registerDSComponent('Typography', {
+  default: MantineTypography as unknown as React.ComponentType<TypographyProps>,
+});
+
+/* -------------------------------------------------------------------------- */
+/* Public shell                                                               */
+/* -------------------------------------------------------------------------- */
+
+const TypographyShell = forwardRef(
   <C extends React.ElementType = 'span'>(props: TypographyProps<C>, ref: PolymorphicRef<C>) => {
-    const {
-      ellipsis,
-      textColor = 'currentcolor',
-      textDecoration,
-      textTransform,
-      variant,
-      lineHeight,
-      fontWeight,
-      fontSize,
-      ...rest
-    } = props;
-
-    const mappedProps = {
-      $ellipsis: ellipsis,
-      $textColor: textColor,
-      $textDecoration: textDecoration,
-      $textTransform: textTransform,
-      $variant: variant,
-      $lineHeight: lineHeight,
-      $fontWeight: fontWeight,
-      $fontSize: fontSize,
-    };
-
-    return <StyledTypography ref={ref} tag="span" {...mappedProps} {...rest} />;
+    const Resolved = useDSComponent('Typography', RESOLVER_DEFAULT);
+    return React.createElement(Resolved, { ...props, ref } as unknown as TypographyProps & {
+      ref: React.Ref<HTMLElement>;
+    });
   },
-) as TypographyComponent;
+);
 
+/**
+ * Legacy `TypographyComponent<C>` shape — preserved exactly so
+ * `styled<TypographyComponent<X>>(Typography)` wrappers (CellTypography,
+ * NavLinkBadgeCounter, etc.) and consumers that thread an arbitrary `tag`
+ * (e.g. Alert's `titleAs`) keep compiling. The polymorphic generic flows
+ * through `PolymorphicComponentPropsWithRef` — matching the legacy file
+ * verbatim — so any `tag={X}` is accepted regardless of X.
+ */
 type TypographyComponent<C extends React.ElementType = 'span'> = <T extends React.ElementType = C>(
   props: PolymorphicComponentPropsWithRef<T, TypographyProps<T>>,
 ) => JSX.Element;
 
-const StyledTypography = styled<BoxComponent<'span'>>(Box)<PropsToTransientProps<TransientTypographyProps>>`
-  ${({ $variant, $fontSize, $lineHeight, theme }) => {
-    return variant({ $variant, theme, $fontSize, $lineHeight });
-  }}
-  ${({ $ellipsis }) => ($ellipsis ? ellipsis : '')}
-
-  ${({ theme, ...props }) => {
-    return handleResponsiveValues(
-      {
-        color: props.$textColor,
-        textDecoration: props.$textDecoration,
-        textTransform: props.$textTransform,
-        lineHeight: props.$lineHeight,
-        fontWeight: props.$fontWeight,
-        fontSize: props.$fontSize,
-      },
-      theme,
-    );
-  }}
-`;
+const Typography = TypographyShell as unknown as TypographyComponent;
 
 export { Typography };
-export type { TypographyProps, TypographyComponent, TransientTypographyProps };
+export type { TypographyComponent, TypographyProps, TransientTypographyProps };

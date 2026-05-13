@@ -116,3 +116,8 @@ storybook-static
 .vscode/*
 !.vscode/settings.json
 front-workspace.code-workspace
+
+# Local cache of LLM-formatted docs for AI sessions (see CLAUDE.md).
+# Not committed — sessions re-download from https://mantine.dev/llms-full.txt
+# (or the consumer sets up the @mantine/mcp-server MCP integration).
+.ai-docs/

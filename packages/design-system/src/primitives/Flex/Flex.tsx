@@ -1,58 +1,69 @@
+/**
+ * Public Flex entry — resolver-aware shell.
+ *
+ *   1. Looks up the resolved implementation via `useDSComponent('Flex')`.
+ *      Consumers can swap implementations per-subtree via <DSProvider>.
+ *   2. The shipped default is `MantineFlex` (registered below).
+ *   3. The legacy styled-components implementation lives in `./legacy/LegacyFlex`
+ *      and can be opted into via the resolver for one-line rollback.
+ *
+ * Polymorphic forwardRef shape matches the legacy Flex so existing
+ * `styled<FlexComponent<X>>(Flex)` wrappers in the DS (SimpleMenu's
+ * OptionButton, Sidebar, etc.) compile unchanged.
+ */
 import * as React from 'react';
 
-import { styled, type CSSProperties } from 'styled-components';
-
-import {
-  handleResponsiveValues,
-  type ResponsiveProperty,
-  type ResponsiveThemeProperty,
-} from '../../helpers/handleResponsiveValues';
-import { PolymorphicRef, PropsToTransientProps } from '../../types';
+import { registerDSComponent, useDSComponent, DEFAULT as RESOLVER_DEFAULT } from '../../resolver';
+import { PolymorphicRef } from '../../types';
 import { forwardRef } from '../../utilities/forwardRef';
-import { Box, BoxComponent, BoxProps } from '../Box';
 
-interface TransientFlexProps {
-  alignItems?: ResponsiveProperty<CSSProperties['alignItems']>;
-  justifyContent?: ResponsiveProperty<CSSProperties['justifyContent']>;
-  wrap?: ResponsiveProperty<CSSProperties['flexWrap']>;
-  direction?: ResponsiveProperty<CSSProperties['flexDirection']>;
-  gap?: ResponsiveThemeProperty<'spaces', 'gap'>;
-  inline?: boolean;
+import { MantineFlex, type FlexProps, type TransientFlexProps } from './MantineFlex';
+
+/* -------------------------------------------------------------------------- */
+/* Registry augmentation                                                      */
+/* -------------------------------------------------------------------------- */
+
+declare module '../../resolver/types' {
+  interface DSComponentRegistry {
+    Flex: { props: FlexProps; variants: DSFlexVariants };
+  }
+  /**
+   * Flex has no semantic variants today — direction/inline are layout
+   * controls, not variants. `default` is the only shipped key.
+   */
+  interface DSFlexVariants {
+    default: true;
+  }
 }
 
-type FlexProps<C extends React.ElementType = 'div'> = BoxProps<C> & TransientFlexProps;
+/* -------------------------------------------------------------------------- */
+/* Register the shipped default                                               */
+/* -------------------------------------------------------------------------- */
 
-const Flex = forwardRef(<C extends React.ElementType = 'div'>(props: FlexProps<C>, ref: PolymorphicRef<C>) => {
-  const { className, alignItems, direction, inline, gap, justifyContent, wrap, ...rest } = props;
-  const mappedProps = {
-    $alignItems: alignItems,
-    $direction: direction,
-    $gap: gap,
-    $justifyContent: justifyContent,
-    $wrap: wrap,
-    $inline: inline,
-  };
-
-  // @ts-expect-error fix: Type 'symbol' is not assignable to type `gap?: ResponsiveThemeProperty<'spaces', 'gap'>`;
-  return <StyledFlex className={className} ref={ref} {...mappedProps} {...rest} />;
+registerDSComponent('Flex', {
+  default: MantineFlex as unknown as React.ComponentType<FlexProps>,
 });
 
-type FlexComponent<C extends React.ElementType = 'div'> = typeof Flex<C>;
+/* -------------------------------------------------------------------------- */
+/* Public shell                                                               */
+/* -------------------------------------------------------------------------- */
 
-const StyledFlex = styled<BoxComponent>(Box)<PropsToTransientProps<TransientFlexProps>>`
-  ${({ theme, $display = 'flex', $alignItems = 'center', $direction = 'row', ...props }) =>
-    handleResponsiveValues(
-      {
-        gap: props.$gap,
-        alignItems: $alignItems,
-        justifyContent: props.$justifyContent,
-        flexWrap: props.$wrap,
-        flexDirection: $direction,
-        display: props.$inline ? 'inline-flex' : $display,
-      },
-      theme,
-    )};
-`;
+const FlexShell = forwardRef(<C extends React.ElementType = 'div'>(props: FlexProps<C>, ref: PolymorphicRef<C>) => {
+  const Resolved = useDSComponent('Flex', RESOLVER_DEFAULT);
+  return React.createElement(Resolved, { ...props, ref } as unknown as FlexProps & {
+    ref: React.Ref<HTMLElement>;
+  });
+});
+
+/**
+ * The legacy `FlexComponent<C>` shape — preserved so `styled<FlexComponent<X>>(Flex)`
+ * wrappers across the DS keep compiling. Same pattern as Box's cast.
+ */
+type FlexComponent<C extends React.ElementType = 'div'> = <T extends React.ElementType = C>(
+  props: FlexProps<T>,
+) => JSX.Element;
+
+const Flex = FlexShell as unknown as FlexComponent;
 
 export { Flex };
 export type { FlexComponent, FlexProps, TransientFlexProps };

@@ -1,27 +1,36 @@
+/**
+ * IconButton — drop-in port off styled-components.
+ *
+ * Rebuilt as a thin wrapper around the migrated `<Button>` component (which
+ * is now MantineButton-backed). The legacy version reimplemented all the
+ * variant + hover + active + disabled styles via styled-components and
+ * shared helpers in `Button/legacy/utils.ts`; we now lean on Button's
+ * existing variant translation and just provide icon-button-specific
+ * sizing (square padding) + tooltip wrapping + `<AccessibleIcon>` for a11y.
+ *
+ * Public API preserved: same `size`, `variant`, `label`, `withTooltip`,
+ * `disabled`, `onClick`, `type`, polymorphic `tag` via Button's surface.
+ *
+ * Visual rule (square padding per size, group border-radius) moved to
+ * `componentPolish.css` keyed on `[data-strapi-icon-button*]`.
+ */
 import * as React from 'react';
 
-import { css, styled } from 'styled-components';
-
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
-import { PolymorphicRef, PropsToTransientProps } from '../../types';
+import { Flex, FlexProps } from '../../primitives/Flex';
+import { PolymorphicRef } from '../../types';
 import { AccessibleIcon } from '../../utilities/AccessibleIcon';
 import { forwardRef } from '../../utilities/forwardRef';
-import { ButtonProps } from '../Button';
-import { getActiveStyle, getDisabledStyle, getHoverStyle, getVariantStyle } from '../Button/utils';
+import { Button, type ButtonProps } from '../Button';
 import { Tooltip } from '../Tooltip';
 
 type IconButtonProps<C extends React.ElementType = 'button'> = FlexProps<C> &
   Pick<ButtonProps, 'size' | 'variant' | 'type'> & {
     children: React.ReactNode;
     disabled?: boolean;
-    /**
-     * This isn't visually rendered, but required for accessibility.
-     */
+    /** Not visually rendered; required for accessibility (`aria-label`). */
     label: string;
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
-    /**
-     * @default true
-     */
+    /** @default true */
     withTooltip?: boolean;
   };
 
@@ -29,7 +38,6 @@ const IconButton = forwardRef(
   <C extends React.ElementType = 'button'>(
     {
       label,
-      background,
       children,
       disabled = false,
       onClick,
@@ -42,29 +50,29 @@ const IconButton = forwardRef(
     ref: PolymorphicRef<C>,
   ) => {
     const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-      if (!disabled && onClick) {
-        onClick(e);
-      }
+      if (!disabled && onClick) onClick(e);
     };
 
+    // Button is polymorphic with its own forwardRef signature; intersecting
+    // with IconButton's polymorphic generic + restProps produces a wider
+    // type than Button's typed entry accepts. Cast at this seam — runtime
+    // forwards everything correctly via Button's spread.
+    const buttonProps = {
+      ref,
+      size,
+      variant,
+      type,
+      onClick: handleClick,
+      disabled,
+      'data-strapi-icon-button': '',
+      'data-strapi-icon-button-size': size,
+      ...restProps,
+    } as React.ComponentProps<typeof Button>;
+
     const component = (
-      <IconButtonWrapper
-        aria-disabled={disabled}
-        background={disabled ? 'neutral150' : background}
-        tag="button"
-        display="inline-flex"
-        justifyContent="center"
-        hasRadius
-        cursor="pointer"
-        {...restProps}
-        ref={ref}
-        $size={size}
-        onClick={handleClick}
-        $variant={variant}
-        type={type}
-      >
+      <Button {...buttonProps}>
         <AccessibleIcon label={label}>{children}</AccessibleIcon>
-      </IconButtonWrapper>
+      </Button>
     );
 
     return withTooltip ? <Tooltip label={label}>{component}</Tooltip> : component;
@@ -73,111 +81,16 @@ const IconButton = forwardRef(
 
 type IconButtonComponent<C extends React.ElementType = 'button'> = (props: IconButtonProps<C>) => React.ReactNode;
 
-type IconButtonWrapperProps = PropsToTransientProps<Required<Pick<IconButtonProps, 'size' | 'variant'>>>;
+/* -------------------------------------------------------------------------- */
+/* IconButtonGroup                                                            */
+/* -------------------------------------------------------------------------- */
 
-const IconButtonWrapper = styled<FlexComponent<'button'>>(Flex)<IconButtonWrapperProps>`
-  text-decoration: none;
+interface IconButtonGroupProps extends FlexProps {}
 
-  ${(props) => {
-    // NOTE! the border adds `1px` on each edge, so the padding accounts for this.
-    switch (props.$size) {
-      case 'XS': {
-        return css`
-          padding-block: 0.7rem;
-          padding-inline: 0.7rem;
-
-          ${({ theme }) => theme.breakpoints.medium} {
-            padding-block: 0.2rem;
-            padding-inline: 0.2rem;
-          }
-        `;
-      }
-      case 'S': {
-        return css`
-          padding-block: 1.1rem;
-          padding-inline: 1.1rem;
-
-          ${({ theme }) => theme.breakpoints.medium} {
-            padding-block: 0.7rem;
-            padding-inline: 0.7rem;
-          }
-        `;
-      }
-      case 'M': {
-        return css`
-          padding-block: 1.1rem;
-          padding-inline: 1.1rem;
-
-          ${({ theme }) => theme.breakpoints.medium} {
-            padding-block: 0.9rem;
-            padding-inline: 0.9rem;
-          }
-        `;
-      }
-      case 'L': {
-        return css`
-          padding-block: 1.5rem;
-          padding-inline: 1.5rem;
-
-          ${({ theme }) => theme.breakpoints.medium} {
-            padding-block: 1.1rem;
-            padding-inline: 1.1rem;
-          }
-        `;
-      }
-    }
-  }}
-  ${getVariantStyle}
-  ${(props) =>
-    props.$variant === 'tertiary'
-      ? css`
-          color: ${props.theme.colors.neutral500};
-        `
-      : ''}
-
-  &:hover {
-    ${getHoverStyle}
-    ${(props) =>
-      props.$variant === 'tertiary'
-        ? css`
-            color: ${props.theme.colors.neutral600};
-          `
-        : ''}
-  }
-
-  &:active {
-    ${getActiveStyle}
-  }
-
-  &[aria-disabled='true'] {
-    ${getDisabledStyle}
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition:
-      ${(props) => props.theme.transitions.backgroundColor},
-      ${(props) => props.theme.transitions.color},
-      border-color ${(props) => props.theme.motion.timings['200']} ${(props) => props.theme.motion.easings.easeOutQuad};
-  }
-`;
-
-const IconButtonGroup = styled<FlexComponent>(Flex)`
-  & ${IconButtonWrapper}:first-child {
-    border-radius: ${({ theme }) => `${theme.borderRadius} 0 0 ${theme.borderRadius}`};
-  }
-
-  & ${IconButtonWrapper}:last-child {
-    border-radius: ${({ theme }) => `0 ${theme.borderRadius} ${theme.borderRadius} 0`};
-  }
-
-  & ${IconButtonWrapper} {
-    border-radius: 0;
-
-    & + ${IconButtonWrapper} {
-      border-left: none;
-    }
-  }
-`;
+const IconButtonGroup = React.forwardRef<HTMLDivElement, IconButtonGroupProps>((props, ref) => {
+  return <Flex ref={ref} data-strapi-icon-button-group="" {...props} />;
+});
+IconButtonGroup.displayName = 'IconButtonGroup';
 
 export { IconButton, IconButtonGroup };
 export type { IconButtonProps, IconButtonComponent };

@@ -55,3 +55,20 @@ export * from './utilities/VisuallyHidden';
  * Primitives re-exports
  * -----------------------------------------------------------------------------------------------*/
 export { useFilter, useCollator, type Filter, useCallbackRef, composeEventHandlers } from '@strapi/ui-primitives';
+
+/* -------------------------------------------------------------------------------------------------
+ * Resolver — consumer-facing override surface
+ *
+ * Lets consumer apps register per-subtree component overrides via DSProvider.
+ * Public API used by `packages/core/admin/admin/src/pages/Home/HomePage.tsx`
+ * and `Theme.tsx`. Wires through to the cherry-picked src/resolver/ system.
+ * -----------------------------------------------------------------------------------------------*/
+export {
+  DSProvider,
+  useDSComponent,
+  registerDSComponent,
+  getRegisteredVariants,
+  _resetRegistryForTests,
+  DEFAULT,
+} from './resolver';
+export type { DSProviderProps, DSComponentRegistry, RegisterOptions } from './resolver';

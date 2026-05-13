@@ -1,160 +1,100 @@
+/**
+ * Public Button entry point.
+ *
+ * The Button you import from `@strapi/design-system` is a thin shell:
+ *
+ *   1. It looks up the resolved implementation via `useDSComponent('Button', variant)`.
+ *      Consumers can swap implementations per-variant or per-subtree via `<DSProvider>`
+ *      (override surface 6 — see principles.md).
+ *   2. The shipped default is `MantineButton` (registered below).
+ *   3. The legacy styled-components implementation lives in `./legacy/LegacyButton` and
+ *      can be opted into via the resolver for one-line rollback.
+ *
+ * Type-level: this file also augments the resolver's `DSComponentRegistry` so
+ * TypeScript knows `Button` is a registered name and `DSButtonVariants` is the
+ * append-only variant set.
+ */
 import * as React from 'react';
 
-import { Loader } from '@strapi/icons';
-import { styled, keyframes } from 'styled-components';
-
-import { Flex, FlexComponent, FlexProps } from '../../primitives/Flex';
-import { Typography } from '../../primitives/Typography';
-import { PolymorphicRef, PropsToTransientProps } from '../../types';
+import { registerDSComponent, useDSComponent, DEFAULT as RESOLVER_DEFAULT } from '../../resolver';
 import { forwardRef } from '../../utilities/forwardRef';
 
-import { BUTTON_SIZES, ButtonVariant, ButtonSize, DEFAULT } from './constants';
-import { getDisabledStyle, getHoverStyle, getActiveStyle, getVariantStyle } from './utils';
+import { type ButtonVariant } from './constants';
+import { MantineButton, type ButtonProps } from './MantineButton';
 
-type ButtonProps<C extends React.ElementType = 'button'> = FlexProps<C> & {
-  disabled?: boolean;
-  endIcon?: React.ReactNode;
-  fullWidth?: boolean;
-  loading?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  size?: ButtonSize;
-  startIcon?: React.ReactNode;
-  variant?: ButtonVariant;
-  type?: 'button' | 'submit' | 'reset';
-};
+/* -------------------------------------------------------------------------- */
+/* Registry augmentation                                                      */
+/* -------------------------------------------------------------------------- */
 
-const Button = forwardRef(
-  <C extends React.ElementType = 'button'>(
-    {
-      variant = DEFAULT,
-      startIcon,
-      endIcon,
-      disabled = false,
-      children,
-      onClick,
-      size = BUTTON_SIZES[1],
-      loading = false,
-      fullWidth = false,
-      type = 'button',
-      ...props
-    }: ButtonProps<C>,
-    ref: PolymorphicRef<C>,
-  ) => {
-    const isDisabled = disabled || loading;
-
-    const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-      if (!isDisabled && onClick) {
-        onClick(e);
-      }
+declare module '../../resolver/types' {
+  interface DSComponentRegistry {
+    Button: {
+      props: ButtonProps;
+      variants: DSButtonVariants;
     };
-
-    // Only forward the `type` attribute when we actually render a native button
-    const asTag = (props as { tag?: React.ElementType }).tag ?? 'button';
-    const buttonType = asTag === 'button' || asTag === 'input' ? type : undefined;
-
-    return (
-      <ButtonWrapper
-        ref={ref}
-        aria-disabled={isDisabled}
-        disabled={isDisabled}
-        $size={size}
-        $variant={variant}
-        tag="button"
-        onClick={handleClick}
-        hasRadius
-        gap={2}
-        inline
-        alignItems="center"
-        justifyContent="center"
-        width={fullWidth ? '100%' : undefined}
-        paddingLeft={4}
-        paddingRight={4}
-        cursor="pointer"
-        type={buttonType}
-        {...props}
-      >
-        {(startIcon || loading) && (
-          <Flex tag="span" aria-hidden>
-            {loading ? <LoaderAnimated /> : startIcon}
-          </Flex>
-        )}
-
-        <Typography variant={size === 'S' ? 'pi' : undefined} fontWeight="bold">
-          {children}
-        </Typography>
-
-        {endIcon && (
-          <Flex tag="span" aria-hidden>
-            {endIcon}
-          </Flex>
-        )}
-      </ButtonWrapper>
-    );
-  },
-);
-
-type ButtonComponent<C extends React.ElementType = 'button'> = (props: ButtonProps<C>) => React.ReactNode;
-
-const rotation = keyframes`
-  from {
-    transform: rotate(0deg);
   }
-  to {
-    transform: rotate(359deg);
+  /**
+   * Append-only variant set for `Button`. Consumers may extend via
+   * declaration merging:
+   *
+   *   declare module '@strapi/design-system' {
+   *     interface DSButtonVariants { critical: true }
+   *   }
+   *
+   * The shipped variants below are the ones Strapi has used historically;
+   * none of them ever gets removed.
+   */
+  interface DSButtonVariants {
+    default: true;
+    secondary: true;
+    tertiary: true;
+    danger: true;
+    success: true;
+    ghost: true;
+    'success-light': true;
+    'danger-light': true;
   }
-`;
+}
 
-const LoaderAnimated = styled(Loader)`
-  animation: ${rotation} 2s infinite linear;
-  will-change: transform;
-`;
+/* -------------------------------------------------------------------------- */
+/* Register the shipped default                                               */
+/* -------------------------------------------------------------------------- */
 
-type ButtonWrapperProps = PropsToTransientProps<Required<Pick<ButtonProps, 'size' | 'variant'>>>;
+// React.forwardRef gives us a ComponentType-compatible value; the cast brings
+// it into shape for the resolver registry which expects a plain
+// ComponentType<ButtonProps>.
+registerDSComponent('Button', {
+  default: MantineButton as unknown as React.ComponentType<ButtonProps>,
+});
 
-const ButtonWrapper = styled<FlexComponent<'button'>>(Flex)<ButtonWrapperProps>`
-  ${({ theme, $size }) => {
-    const sizeValue = theme.sizes.button[$size];
+/* -------------------------------------------------------------------------- */
+/* Public shell                                                               */
+/* -------------------------------------------------------------------------- */
 
-    if (typeof sizeValue === 'string') {
-      return `height: ${sizeValue};`;
-    }
+const ButtonShell = forwardRef<HTMLElement, ButtonProps>((props, ref) => {
+  // Resolve per-render so DSProvider overrides take effect immediately.
+  // `Resolved` is typed as `ComponentType<ButtonProps>` which doesn't model
+  // ref in its props — using `React.createElement` here bypasses the JSX
+  // type-check while preserving runtime ref forwarding.
+  const Resolved = useDSComponent('Button', props.variant ?? RESOLVER_DEFAULT);
+  return React.createElement(Resolved, { ...props, ref } as ButtonProps & {
+    ref: React.Ref<HTMLButtonElement>;
+  });
+});
 
-    const styles: string[] = [];
-    Object.entries(sizeValue).forEach(([breakpoint, breakpointValue]) => {
-      if (breakpointValue) {
-        if (breakpoint === 'initial') {
-          styles.push(`height: ${breakpointValue};`);
-        } else if (breakpoint in theme.breakpoints) {
-          const breakpointQuery = theme.breakpoints[breakpoint as keyof typeof theme.breakpoints];
-          styles.push(`${breakpointQuery} { height: ${breakpointValue}; }`);
-        }
-      }
-    });
+(ButtonShell as { displayName?: string }).displayName = 'Button';
 
-    return styles.join('\n');
-  }}
-  text-decoration: none;
-  ${getVariantStyle}
+/**
+ * Polymorphic callable signature — kept for backwards-compatible imports.
+ * The runtime is a non-polymorphic forwardRef; the cast below promotes it to
+ * a polymorphic-callable type so `<Button<typeof X>>` syntax keeps type-
+ * checking in LinkButton, SimpleMenu, IconButton.
+ */
+type ButtonComponent = <C extends React.ElementType = 'button'>(
+  props: ButtonProps<C> & React.RefAttributes<HTMLElement>,
+) => React.ReactElement | null;
 
-  &:hover {
-    ${getHoverStyle}
-  }
-
-  &:active {
-    ${getActiveStyle}
-  }
-
-  &[aria-disabled='true'] {
-    ${getDisabledStyle}
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    transition:
-      ${(props) => props.theme.transitions.backgroundColor},
-      ${(props) => props.theme.transitions.color},
-      border-color ${(props) => props.theme.motion.timings['200']} ${(props) => props.theme.motion.easings.easeOutQuad};
-  }
-`;
+const Button = ButtonShell as unknown as ButtonComponent;
 
 export { Button };
-export type { ButtonComponent, ButtonProps };
+export type { ButtonComponent, ButtonProps, ButtonVariant };

@@ -52,4 +52,81 @@
   [data-strapi-flex] {
     align-items: center;
   }
+
+  /* === Typography — per-variant font sizing ============================= *
+   * Drop-in port of the legacy styled-components variant() helper from
+   * `styles/type.ts`. Each variant emits font-size + line-height (and
+   * sometimes font-weight + text-transform) using --strapi-* CSS vars
+   * straight, with the same `(min-width: 48em)` desktop breakpoint the
+   * legacy used (theme.breakpoints.medium = 768px).
+   *
+   * Consumer overrides via `styled(Typography)` or per-element style
+   * still win — these rules use class-level specificity, same as the
+   * legacy generated classes. Strapi consumers' explicit `fontWeight=`
+   * / `fontSize=` / `lineHeight=` Box props are translated by
+   * MantineBox to inline style, which beats these rules.
+   * ====================================================================== */
+  [data-strapi-typography-variant='alpha'] {
+    font-weight: var(--strapi-font-weight-bold);
+    font-size: var(--strapi-font-size-6); /* 2.8rem */
+    line-height: var(--strapi-line-height-0); /* 1.14 */
+  }
+  [data-strapi-typography-variant='beta'] {
+    font-weight: var(--strapi-font-weight-bold);
+    font-size: var(--strapi-font-size-5); /* 2rem */
+    line-height: var(--strapi-line-height-1); /* 1.22 */
+  }
+  [data-strapi-typography-variant='delta'] {
+    font-weight: var(--strapi-font-weight-semi-bold);
+    font-size: var(--strapi-font-size-4); /* 1.8rem */
+    line-height: var(--strapi-line-height-3); /* 1.33 */
+  }
+  [data-strapi-typography-variant='epsilon'] {
+    font-size: var(--strapi-font-size-4); /* 1.8rem */
+    line-height: var(--strapi-line-height-3); /* 1.33 */
+  }
+  [data-strapi-typography-variant='omega'] {
+    font-size: var(--strapi-font-size-3); /* 1.6rem */
+    line-height: var(--strapi-line-height-6); /* 1.5 */
+  }
+  [data-strapi-typography-variant='pi'] {
+    font-size: var(--strapi-font-size-1); /* 1.2rem */
+    line-height: var(--strapi-line-height-3); /* 1.33 */
+  }
+  [data-strapi-typography-variant='sigma'] {
+    font-weight: var(--strapi-font-weight-bold);
+    text-transform: uppercase;
+    font-size: var(--strapi-font-size-0); /* 1.1rem */
+    line-height: var(--strapi-line-height-5); /* 1.45 */
+  }
+  @media (min-width: 48em) {
+    [data-strapi-typography-variant='alpha'] {
+      font-size: var(--strapi-font-size-7); /* 3.2rem */
+      line-height: var(--strapi-line-height-2); /* 1.25 */
+    }
+    [data-strapi-typography-variant='beta'] {
+      font-size: var(--strapi-font-size-4); /* 1.8rem */
+    }
+    [data-strapi-typography-variant='delta'] {
+      font-size: var(--strapi-font-size-3); /* 1.6rem */
+      line-height: var(--strapi-line-height-2); /* 1.25 */
+    }
+    [data-strapi-typography-variant='epsilon'] {
+      font-size: var(--strapi-font-size-3); /* 1.6rem */
+      line-height: var(--strapi-line-height-6); /* 1.5 */
+    }
+    [data-strapi-typography-variant='omega'] {
+      font-size: var(--strapi-font-size-2); /* 1.4rem */
+      line-height: var(--strapi-line-height-4); /* 1.43 */
+    }
+  }
+
+  /* Ellipsis hook — preserved from the legacy `ellipsis` styled-components
+   * mixin in `styles/type.ts`. */
+  [data-strapi-typography-ellipsis] {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }

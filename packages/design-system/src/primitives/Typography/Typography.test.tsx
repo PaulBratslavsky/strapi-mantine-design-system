@@ -1,117 +1,86 @@
+/**
+ * Typography unit tests against the Mantine substrate.
+ *
+ * Updated for Phase 5e: variant styling lives in `theming/componentPolish.css`
+ * as `[data-strapi-typography-variant="..."]` rules with `@media` queries
+ * (drop-in for the legacy styled-components emission). jsdom doesn't apply
+ * external stylesheets, so we verify the **contract** the substrate exposes
+ * (correct data-attribute hooks, polymorphic tag, ellipsis hook) rather than
+ * resolved font-size/line-height pixel values. The runtime CSS is exercised
+ * by the live admin smoke check + by browsers in production.
+ */
 import * as React from 'react';
 
 import { render, screen } from '@test/utils';
 
 import { TEXT_VARIANTS } from '../../styles/type';
-import { lightTheme } from '../../themes';
 
 import { Typography, TypographyProps } from './Typography';
 
-// Expected base styles for each variant (mobile/base styles, not media queries)
-const variantExpectedStyles: Record<
-  (typeof TEXT_VARIANTS)[number],
-  { fontWeight?: string; fontSize: string; lineHeight: string; textTransform?: string }
-> = {
-  alpha: {
-    fontWeight: String(lightTheme.fontWeights.bold),
-    fontSize: lightTheme.fontSizes[6], // 2.8rem
-    lineHeight: String(lightTheme.lineHeights[0]), // 1.14
-  },
-  beta: {
-    fontWeight: String(lightTheme.fontWeights.bold),
-    fontSize: lightTheme.fontSizes[5], // 2rem
-    lineHeight: String(lightTheme.lineHeights[1]), // 1.22
-  },
-  delta: {
-    fontWeight: String(lightTheme.fontWeights.semiBold),
-    fontSize: lightTheme.fontSizes[4], // 1.8rem
-    lineHeight: String(lightTheme.lineHeights[3]), // 1.33
-  },
-  epsilon: {
-    fontSize: lightTheme.fontSizes[4], // 1.8rem
-    lineHeight: String(lightTheme.lineHeights[3]), // 1.33
-  },
-  omega: {
-    fontSize: lightTheme.fontSizes[3], // 1.6rem
-    lineHeight: String(lightTheme.lineHeights[6]), // 1.5
-  },
-  pi: {
-    fontSize: lightTheme.fontSizes[1], // 1.2rem
-    lineHeight: String(lightTheme.lineHeights[3]), // 1.33
-  },
-  sigma: {
-    fontWeight: String(lightTheme.fontWeights.bold),
-    fontSize: lightTheme.fontSizes[0], // 1.1rem
-    lineHeight: String(lightTheme.lineHeights[5]), // 1.45
-    textTransform: 'uppercase',
-  },
-};
-
 describe('Typography', () => {
-  it('should render a span element by default', () => {
+  it('renders a span element by default', () => {
     render(<Typography>Hello World</Typography>);
     expect(screen.getByText('Hello World').tagName).toBe('SPAN');
   });
 
-  it("should render the ellipsis styles when the 'ellipsis' prop is passed", () => {
-    render(<Typography ellipsis>Hello World</Typography>);
+  it('stamps the data-strapi-typography hook for CSS targeting', () => {
+    render(<Typography>Hello World</Typography>);
+    expect(screen.getByText('Hello World')).toHaveAttribute('data-strapi-typography');
+  });
 
-    expect(screen.getByText('Hello World')).toHaveStyle(`
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    `);
+  it("stamps data-strapi-typography-ellipsis when the 'ellipsis' prop is passed", () => {
+    render(<Typography ellipsis>Hello World</Typography>);
+    expect(screen.getByText('Hello World')).toHaveAttribute('data-strapi-typography-ellipsis');
+  });
+
+  it('does not stamp ellipsis hook when ellipsis is unset', () => {
+    render(<Typography>Hello World</Typography>);
+    expect(screen.getByText('Hello World')).not.toHaveAttribute('data-strapi-typography-ellipsis');
   });
 
   describe('Variants', () => {
     TEXT_VARIANTS.forEach((variant) => {
-      it(`should render ${variant} variant`, () => {
+      it(`stamps data-strapi-typography-variant="${variant}" for variant ${variant}`, () => {
         const props: TypographyProps = { variant };
-        render(<Typography {...props}>Hello World</Typography>);
-
-        const element = screen.getByText('Hello World');
-        expect(element).toBeInTheDocument();
-
-        // Test that the styles from the variant are applied correctly
-        const expectedStyles = variantExpectedStyles[variant];
-
-        if (expectedStyles.fontWeight) {
-          expect(element).toHaveStyle(`font-weight: ${expectedStyles.fontWeight}`);
-        }
-        expect(element).toHaveStyle(`font-size: ${expectedStyles.fontSize}`);
-        expect(element).toHaveStyle(`line-height: ${expectedStyles.lineHeight}`);
-        if (expectedStyles.textTransform) {
-          expect(element).toHaveStyle(`text-transform: ${expectedStyles.textTransform}`);
-        }
+        render(<Typography {...props}>Hello {variant}</Typography>);
+        expect(screen.getByText(`Hello ${variant}`)).toHaveAttribute(
+          'data-strapi-typography-variant',
+          variant,
+        );
       });
+    });
+
+    it('defaults to the omega variant when no variant prop is passed', () => {
+      render(<Typography>Hello World</Typography>);
+      expect(screen.getByText('Hello World')).toHaveAttribute(
+        'data-strapi-typography-variant',
+        'omega',
+      );
     });
   });
 
   describe('Polymorphic component', () => {
-    it("should accept div props that are not explicitly defined in the Box component's prop types", () => {
-      const { container } = render(<Typography style={{ color: 'pink' }} />);
-
-      expect(container.firstChild).toHaveStyle('color: pink');
+    it('accepts native style overrides via the style prop', () => {
+      render(<Typography style={{ color: 'pink' }}>x</Typography>);
+      expect(screen.getByText('x')).toHaveStyle('color: pink');
     });
 
-    it('should render and accept attributes when the as prop is `a`', () => {
-      // @ts-expect-error – href is not a valid attribute for a div, this error asserts it's not allowed
-      const { rerender } = render(<Typography href="https://strapi.io" />);
-
+    it('renders as an anchor when tag is "a"', () => {
+      const { rerender } = render(<Typography>placeholder</Typography>);
       rerender(
         <Typography tag="a" href="https://strapi.io">
           Strapi
         </Typography>,
       );
       expect(screen.getByText('Strapi')).toHaveAttribute('href', 'https://strapi.io');
+      expect(screen.getByText('Strapi').tagName).toBe('A');
     });
 
-    it('should render and accept props from the component when passed as the `as` prop', () => {
-      const MyLink = ({ to, ...props }: { to: string; children?: React.ReactNode }) => <a href={to} {...props} />;
-
-      // @ts-expect-error – to is not a valid attribute for a div, this error asserts it's not allowed
-      const { rerender } = render(<Typography to="https://strapi.io" />);
-
+    it('renders with a custom component when tag is a React component', () => {
+      const MyLink = ({ to, ...props }: { to: string; children?: React.ReactNode }) => (
+        <a href={to} {...props} />
+      );
+      const { rerender } = render(<Typography>placeholder</Typography>);
       rerender(
         <Typography tag={MyLink} to="https://strapi.io">
           Strapi
@@ -120,19 +89,16 @@ describe('Typography', () => {
       expect(screen.getByText('Strapi')).toHaveAttribute('href', 'https://strapi.io');
     });
 
-    it('should allow me to pass different refs', () => {
+    it('forwards refs through to the rendered element', () => {
       const MyLink = () => {
         const linkRef = React.useRef<HTMLAnchorElement>(null);
-
         return (
           <Typography tag="a" href="https://strapi.io" ref={linkRef}>
             click me!
           </Typography>
         );
       };
-
       render(<MyLink />);
-
       expect(screen.getByRole('link', { name: 'click me!' })).toBeInTheDocument();
     });
   });

@@ -1,111 +1,135 @@
 /**
  * MantineFlex — Mantine-backed implementation of Strapi's <Flex>.
  *
- * Composes through Strapi's `<Box>` resolver shell, which routes to MantineBox
- * by default. That means:
- *   - All Box-inherited style props (margin, padding, color, background, etc.)
- *     flow through MantineBox's translation untouched. No duplication.
- *   - Flex-specific props (alignItems, justifyContent, direction, wrap, gap,
- *     inline) are translated to CSS at this layer and merged into `style`.
+ * Routes through Mantine's native `<Flex>` (which extends Mantine `<Box>`),
+ * so:
+ *   - Flex-specific Strapi props (alignItems, justifyContent, direction,
+ *     wrap, gap) pass through to Mantine's `align`/`justify`/`direction`/
+ *     `wrap`/`gap` StyleProps — which support the responsive
+ *     `{ initial, small, medium, large }` object form natively because the
+ *     theme augmentation in `theming/mantine-augmentation.ts` registered
+ *     those keys as Mantine breakpoints. Mantine emits real `@media` queries
+ *     for them.
+ *   - Box-inherited Strapi props (margin, padding, color, etc.) are translated
+ *     via the shared `translateBoxProps` helper exported from
+ *     `primitives/Box/translate.ts`.
  *
  * Default behavior matches the legacy Strapi <Flex>:
  *   display: flex; align-items: center; flex-direction: row.
  * That's load-bearing — many consumers rely on implicit centering.
  *
- * Responsive Flex props (alignItems={{ initial: 'center', large: 'flex-start' }})
- * are not exercised by any in-tree consumer today; for v1 they fall back to
- * the `initial` value. Box-inherited responsive props (margin/padding/etc.)
- * still work via Mantine StyleProps because MantineBox handles them natively.
+ * The Strapi-experimental admin uses `direction={{ initial: 'column',
+ * large: 'row' }}` for its top-level layout — that's the regression that
+ * triggered routing through Mantine `<Flex>` instead of inline style.
  */
 import * as React from 'react';
 
-import { Box } from '../Box';
+import { Flex as MantineFlexBase } from '@mantine/core';
+
+import { resolveSpacing, translateBoxProps } from '../Box/translate';
 
 import type { FlexProps, TransientFlexProps } from './legacy/LegacyFlex';
 
 /* -------------------------------------------------------------------------- */
-/* Local resolvers                                                            */
+/* Resolvers — Flex-specific                                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Take a Flex-specific value (which may be the responsive object form) and
- * collapse to a single CSS-string value for inline-style emission. Responsive
- * form uses only the `initial` value as a fallback — see file-header note.
- *
- * Widely typed because callers pass values from `styled-components`-styled
- * `ResponsiveProperty<...>` unions whose generic parameter trips TS inference
- * when we try to thread it through. Output is always a string-or-undefined
- * suitable for `style.foo`.
+ * Map Strapi's gap (a number indexing `theme.spaces` OR a CSS string OR a
+ * responsive object) onto Mantine's `gap` shape: a bare string or a
+ * `{ initial?, small?, medium?, large? }` object.
  */
-function pickFlexValue(v: unknown): string | undefined {
-  if (v == null) return undefined;
-  if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-    const initial = (v as Record<string, unknown>).initial;
-    return initial == null ? undefined : String(initial);
+function translateGap(gap: unknown): string | Record<string, string | undefined> | undefined {
+  if (gap == null) return undefined;
+  if (typeof gap === 'number') return resolveSpacing(gap);
+  if (typeof gap === 'object' && gap !== null && !Array.isArray(gap)) {
+    const out: Record<string, string | undefined> = {};
+    for (const [bp, v] of Object.entries(gap)) {
+      out[bp] = resolveSpacing(v);
+    }
+    return out;
   }
-  return String(v);
+  return String(gap);
 }
 
-/** Numeric gap index → space CSS var; pass strings through. */
-function resolveGap(v: unknown): string | undefined {
-  if (v == null) return undefined;
-  if (typeof v === 'number') return `var(--strapi-space-${v})`;
-  if (typeof v === 'object' && v !== null) {
-    const initial = (v as { initial?: unknown }).initial;
-    if (typeof initial === 'number') return `var(--strapi-space-${initial})`;
-    if (initial != null) return String(initial);
-    return undefined;
-  }
-  return String(v);
+/**
+ * Pass-through for direction/align/justify/wrap. The bare value or the full
+ * responsive object flows straight to Mantine. Typed wide (`unknown`) on
+ * input because csstype's strict `FlexDirection | AlignItems | …` unions
+ * trip TS inference when threaded through a generic.
+ */
+function passThrough(v: unknown): unknown {
+  return v ?? undefined;
 }
 
 /* -------------------------------------------------------------------------- */
 /* Component                                                                  */
 /* -------------------------------------------------------------------------- */
 
-type MantineFlexProps = FlexProps & {
+// Mantine's <Flex> has a strict polymorphic type. Strapi's `tag` accepts any
+// ElementType, so we widen the JSX type. Runtime behavior is unchanged.
+const MantineFlexPermissive = MantineFlexBase as unknown as React.ComponentType<
+  Record<string, unknown> & { ref?: React.Ref<HTMLElement> }
+>;
+
+type MantineFlexComponentProps = FlexProps & {
+  tag?: React.ElementType;
   style?: React.CSSProperties;
   className?: string;
   children?: React.ReactNode;
 };
 
-const MantineFlex = React.forwardRef<HTMLElement, MantineFlexProps>((props, ref) => {
-  const {
-    alignItems = 'center',
-    justifyContent,
-    direction = 'row',
-    wrap,
-    gap,
-    inline,
-    style,
-    ...rest
-  } = props as MantineFlexProps & TransientFlexProps;
+const MantineFlex = React.forwardRef<HTMLElement, MantineFlexComponentProps>((props, ref) => {
+  const { alignItems, justifyContent, direction, wrap, gap, inline, tag, children, ...rawBoxProps } =
+    props as MantineFlexComponentProps & TransientFlexProps;
 
-  // Merge Flex-specific concerns into inline style. The user's own `style`
-  // wins (spread last) — matches how the legacy Box+styled-components stacked.
-  // `as React.CSSProperties[...]` casts let us hand string-typed values to
-  // csstype's strict union without losing the runtime correctness — Mantine's
-  // own Box does the same thing for its style passthrough.
-  const flexStyle: React.CSSProperties = {
-    flexDirection: pickFlexValue(direction) as React.CSSProperties['flexDirection'],
-    alignItems: pickFlexValue(alignItems) as React.CSSProperties['alignItems'],
-    justifyContent: pickFlexValue(justifyContent) as React.CSSProperties['justifyContent'],
-    flexWrap: pickFlexValue(wrap) as React.CSSProperties['flexWrap'],
-    gap: resolveGap(gap),
-    ...style,
+  // Translate Box-inherited Strapi props (margin/padding/color/etc.) via the
+  // shared helper. `rest` contains HTML attrs that need to pass through to
+  // the DOM.
+  const { mantineProps, inlineStyle, rest } = translateBoxProps(rawBoxProps);
+
+  // Flex-specific Strapi → Mantine name mapping. Responsive shapes are
+  // preserved so Mantine emits real media queries.
+  //
+  // CRITICAL: do NOT default direction/alignItems here. Mantine writes bare
+  // values to the element's inline `style` attribute, which beats every
+  // styled(Flex)-extending wrapper's class-level override (e.g.
+  // `Column = styled(Flex)\`flex-direction: column\``, `MenuDetails`'s
+  // breakpoint-scoped `flex-direction: column`). The Strapi default of
+  // `align-items: center` lives in `theming/componentPolish.css` as a
+  // `[data-strapi-flex]` rule — same specificity as a styled() class, source
+  // order then determines the winner, matching the legacy cascade behavior.
+  // `flex-direction: row` is the CSS default, so no rule needed there.
+  const flexProps = {
+    direction: direction !== undefined ? passThrough(direction) : undefined,
+    align: alignItems !== undefined ? passThrough(alignItems) : undefined,
+    justify: justifyContent !== undefined ? passThrough(justifyContent) : undefined,
+    wrap: wrap !== undefined ? passThrough(wrap) : undefined,
+    gap: gap !== undefined ? translateGap(gap) : undefined,
   };
 
-  // The explicit `display` on Box's resolver wins over our default. If the
-  // consumer passes `display={...}` on Flex, that gets stripped by Box's
-  // destructure and we emit our default; if they want both, they pass via
-  // `style`.
-  const display = inline ? 'inline-flex' : 'flex';
+  // Mantine `<Flex>` applies `display: flex` via an external CSS class
+  // (`@mantine/core/styles.css`). Emit it as inline style too so:
+  //   1. jsdom-based tests can verify display behavior (jsdom doesn't resolve
+  //      external stylesheets).
+  //   2. `inline` overrides cleanly to `inline-flex` without specificity
+  //      battles against Mantine's class.
+  inlineStyle.display = inline ? 'inline-flex' : 'flex';
 
-  // Composing through Strapi `<Box>` (the resolver shell). Box translates the
-  // remaining margin/padding/color/etc. via MantineBox.
-  // @ts-expect-error — `rest` keeps Strapi's wide Box prop surface; Box's
-  // typed entry is intentionally narrower at this composition seam.
-  return <Box ref={ref} display={display} style={flexStyle} data-strapi-flex="" {...rest} />;
+  return (
+    <MantineFlexPermissive
+      ref={ref}
+      component={tag as React.ElementType | undefined}
+      style={inlineStyle}
+      data-strapi-flex=""
+      data-strapi-box=""
+      {...mantineProps}
+      {...flexProps}
+      {...rest}
+    >
+      {children}
+    </MantineFlexPermissive>
+  );
 });
 
 MantineFlex.displayName = 'MantineFlex';

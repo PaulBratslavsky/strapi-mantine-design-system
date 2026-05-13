@@ -20,12 +20,19 @@ import { Flex } from '../../primitives/Flex';
 import { DSProvider } from '../../resolver';
 
 describe('Flex migration', () => {
-  it('defaults to display:flex, align-items:center, flex-direction:row', () => {
+  it('renders display:flex by default; align-items default comes from CSS, not inline style', () => {
     const { container } = render(<Flex>x</Flex>);
     const root = getRoot(container);
+    // display is inline (also covered by Mantine's class) for jsdom + override
+    // ergonomics — see MantineFlex.tsx file header.
     expect(root).toHaveStyle('display: flex');
-    expect(root).toHaveStyle('align-items: center');
-    expect(root).toHaveStyle('flex-direction: row');
+    // alignItems and direction defaults are NOT in inline style — they live
+    // in `theming/componentPolish.css` as `[data-strapi-flex]` rules so
+    // styled(Flex) wrappers (Column, MenuDetails, etc.) can override via
+    // their own class-level rules. Verify the data hook is present.
+    expect(root).toHaveAttribute('data-strapi-flex');
+    expect(root.getAttribute('style')).not.toContain('align-items');
+    expect(root.getAttribute('style')).not.toContain('flex-direction');
   });
 
   it('direction="column" emits flex-direction: column', () => {

@@ -33,4 +33,23 @@
   .mantine-Button-label {
     font-weight: 600;
   }
+
+  /* === Flex — Strapi default of `align-items: center` ==================== *
+   * The legacy Strapi <Flex> defaulted alignItems to 'center' via styled-
+   * components' rule chain — every extending styled(Flex) wrapper inherited
+   * that default and could override via CSS specificity / source order.
+   *
+   * In the Mantine-backed Flex, passing `align="center"` as a default would
+   * make Mantine emit `align-items: center` via inline style, which beats
+   * any styled(Flex) override (inline > class specificity). So MantineFlex
+   * does NOT default in JS; instead, the default lives here as a class-level
+   * rule, and `styled<FlexComponent>(Flex)` wrappers (Column, MenuDetails,
+   * etc.) can override via their own generated class — same cascade behavior
+   * as the legacy.
+   * `flex-direction: row` is the CSS default already, so it's not set here.
+   * ======================================================================
+   */
+  [data-strapi-flex] {
+    align-items: center;
+  }
 }

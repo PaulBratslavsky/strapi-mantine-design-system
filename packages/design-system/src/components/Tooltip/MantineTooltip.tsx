@@ -2,29 +2,37 @@
  * MantineTooltip — Mantine-backed implementation of Strapi's <Tooltip>.
  *
  * Wraps `@mantine/core`'s <Tooltip>, preserving the Strapi prop API so every
- * call site (~18 in DS, more in the admin) keeps working unchanged. The
- * legacy implementation used Radix UI for behavior + styled-components for
- * visuals; this version drops both — Mantine handles behavior (portal,
- * floating UI positioning, ARIA, hover/focus events) and a plain CSS rule
- * in `componentPolish.css` handles Strapi-specific visual tokens (neutral900
- * background, neutral0 text, pi-variant typography).
+ * call site (~18 in DS, more in the admin) keeps working unchanged.
+ *
+ * Architecture (post-refactor): we pass children DIRECTLY to Mantine's
+ * <Tooltip>. Mantine internally clones the child to attach hover/focus
+ * handlers + its floating-ui ref — and its clone composes refs and props
+ * correctly. No `ChildAdapter` wrapper layer (that wrapper used to do its
+ * own naive React.cloneElement which clobbered consumer refs and event
+ * handlers — see the click/drag-handle regression history). The only case
+ * we still handle here is non-element children (string/fragment), which
+ * we wrap in <span> inline before handing to Mantine.
  *
  * Prop translation:
- *   label / description → label  (description was deprecated, preserved as alias)
- *   delayDuration       → openDelay  (default 500ms preserved)
+ *   label / description → label  (description preserved as deprecated alias)
+ *   delayDuration       → openDelay  (default 500ms)
  *   open                → opened     (controlled state)
  *   defaultOpen         → defaultOpened
- *   onOpenChange        → wired via Mantine's `onPositionChange`+events
- *                          mechanism. Most consumers don't subscribe to this;
- *                          when they do we forward via a custom event listener
- *                          on the trigger.
+ *   onOpenChange        → Mantine's <Tooltip> doesn't expose a direct hover-
+ *                          driven equivalent. Since Strapi call sites that
+ *                          actually subscribe to this are vanishingly rare
+ *                          (analytics/telemetry only), the prop is accepted
+ *                          on the type for backwards compat but is currently
+ *                          a no-op. If a consumer surfaces a real use case
+ *                          we can wire a small hook that diffs `opened`
+ *                          across renders.
  *   side (Radix prop)   → position
  *   sideOffset          → offset
  *   disableHoverableContent → events.hover stays true; consumer-driven dismiss
  *                          via opened/onOpenChange already handles the case.
  *
  * Label is wrapped in `<Typography variant="pi" fontWeight="bold">` to match
- * the legacy text rendering exactly.
+ * the legacy text rendering.
  */
 import * as React from 'react';
 
@@ -51,6 +59,11 @@ interface TooltipProps {
   sideOffset?: number;
   defaultOpen?: boolean;
   open?: boolean;
+  /**
+   * Currently accepted for backwards-compat but inert. Mantine's <Tooltip>
+   * doesn't expose a hover-state callback; if you need analytics on tooltip
+   * visibility, raise an issue and we can wire a render-diffing hook.
+   */
   onOpenChange?: (open: boolean) => void;
   disableHoverableContent?: boolean;
   label?: React.ReactNode;
@@ -74,7 +87,6 @@ const MantineTooltip = React.forwardRef<HTMLDivElement, TooltipProps>((props, _r
     delayDuration = 500,
     defaultOpen,
     open,
-    onOpenChange,
     side,
     align,
     sideOffset,
@@ -83,13 +95,16 @@ const MantineTooltip = React.forwardRef<HTMLDivElement, TooltipProps>((props, _r
   const content = label ?? description;
   if (!content) return <>{children}</>;
 
-  // Mantine's controlled state uses `opened`; uncontrolled uses `defaultOpened`.
-  // For onOpenChange, Mantine doesn't expose a direct equivalent for hover-
-  // driven state changes. Most Strapi call sites don't subscribe to this; the
-  // ones that do (rare) typically want it for analytics/telemetry. If needed
-  // in future, we can wire it via a wrapper that watches `opened` transitions.
-  // For now, forward to Mantine and call onOpenChange when `opened` flips
-  // through a render — handled by an effect below if controlled.
+  // Mantine's <Tooltip> clones its child element to attach behavior. The child
+  // MUST be a single ref-forwarding React element. Non-element children
+  // (strings, fragments, null) get wrapped in a <span> so Mantine has
+  // something to attach to.
+  const triggerChild = React.isValidElement(children) ? (
+    children
+  ) : (
+    <span>{children}</span>
+  );
+
   return (
     <MantineTooltipBase
       label={
@@ -104,64 +119,12 @@ const MantineTooltip = React.forwardRef<HTMLDivElement, TooltipProps>((props, _r
       offset={sideOffset ?? 8}
       data-strapi-tooltip=""
     >
-      {/* Mantine's Tooltip clones the child to attach behavior, similar to
-        Radix's Tooltip.Trigger asChild. Single child required. */}
-      <ChildAdapter onOpenChange={onOpenChange}>{children}</ChildAdapter>
+      {triggerChild}
     </MantineTooltipBase>
   );
 });
 
 MantineTooltip.displayName = 'MantineTooltip';
-
-/**
- * Adapter that ensures the tooltip's single child is a ref-forwarding
- * element Mantine can attach to, and bridges the legacy `onOpenChange`
- * callback to hover/focus events on that child.
- */
-const ChildAdapter = React.forwardRef<
-  HTMLElement,
-  {
-    children?: React.ReactNode;
-    onOpenChange?: (_open: boolean) => void;
-  }
->(({ children, onOpenChange, ...rest }, ref) => {
-  if (!React.isValidElement(children)) {
-    // String children or fragments — wrap in a span Mantine can target.
-    return (
-      <span ref={ref as React.Ref<HTMLSpanElement>} {...rest}>
-        {children}
-      </span>
-    );
-  }
-
-  // Clone the child to add event handlers if onOpenChange was supplied.
-  // Mantine's positioning still works because the cloned ref/data attrs
-  // pass through.
-  if (!onOpenChange) {
-    return React.cloneElement(children, { ref, ...rest } as Record<string, unknown>);
-  }
-  return React.cloneElement(children, {
-    ref,
-    ...rest,
-    onMouseEnter: composeHandler((children.props as { onMouseEnter?: (e: unknown) => void }).onMouseEnter, () =>
-      onOpenChange(true),
-    ),
-    onMouseLeave: composeHandler((children.props as { onMouseLeave?: (e: unknown) => void }).onMouseLeave, () =>
-      onOpenChange(false),
-    ),
-    onFocus: composeHandler((children.props as { onFocus?: (e: unknown) => void }).onFocus, () => onOpenChange(true)),
-    onBlur: composeHandler((children.props as { onBlur?: (e: unknown) => void }).onBlur, () => onOpenChange(false)),
-  } as Record<string, unknown>);
-});
-
-ChildAdapter.displayName = 'TooltipChildAdapter';
-
-function composeHandler<E>(original: ((e: E) => void) | undefined, added: (e: E) => void): (e: E) => void {
-  return (e) => {
-    original?.(e);
-    added(e);
-  };
-}
 
 export { MantineTooltip };
 export type { TooltipProps };

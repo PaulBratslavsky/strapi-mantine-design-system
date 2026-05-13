@@ -1,3 +1,22 @@
+/* -------------------------------------------------------------------------------------------------
+ * CSS side-effect imports — ORDER MATTERS, must precede component code.
+ *
+ *   1. theming/layers.css         — cascade-layer declaration + @import Mantine
+ *                                    styles. MUST be first so layer order is
+ *                                    established before any layered CSS arrives.
+ *   2. theming/tokens.css         — --strapi-* CSS vars in @layer strapi-tokens.
+ *   3. styles/global.css          — base reset + body typography in @layer reset.
+ *   4. theming/componentPolish.css — Strapi-specific polish in @layer
+ *                                    strapi-components.
+ *
+ * `sideEffects` in package.json explicitly allowlists *.css + this file so
+ * Vite / Rollup don't tree-shake these imports out.
+ * -----------------------------------------------------------------------------------------------*/
+import './theming/layers.css';
+import './theming/tokens.css';
+import './styles/global.css';
+import './theming/componentPolish.css';
+
 /**
  * Styled Components Module Declaration
  * -----------------------------------------------------------------------------------------------*/
